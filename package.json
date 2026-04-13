@@ -1,0 +1,64 @@
+{
+  "name": "frisk",
+  "version": "0.1.0",
+  "description": "Frisk your vibe-coded app before someone else does.",
+  "type": "module",
+  "bin": {
+    "frisk": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "biome check --write ."
+  },
+  "keywords": [
+    "security",
+    "scanner",
+    "cli",
+    "vibe-coding",
+    "audit",
+    "vulnerability",
+    "semgrep",
+    "gitleaks",
+    "devsecops"
+  ],
+  "author": "Anshul Bhartiya",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bhartiyaanshul/vibeaudit"
+  },
+  "homepage": "https://vibeaudit.anshulbuilds.xyz",
+  "bugs": {
+    "url": "https://github.com/Bhartiyaanshul/vibeaudit/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "cli-table3": "^0.6.5",
+    "commander": "^13.1.0",
+    "ora": "^8.2.0",
+    "picocolors": "^1.1.1",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.14.1",
+    "tsup": "^8.4.0",
+    "vitest": "^3.1.1"
+  }
+}

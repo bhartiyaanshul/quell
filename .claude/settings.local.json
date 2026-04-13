@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(node dist/cli.js)",
+      "Bash(npm test:*)",
+      "Bash(npx biome:*)",
+      "Bash(node dist/cli.js .)",
+      "Bash(node dist/cli.js fixtures/vulnerable-app)",
+      "Bash(node dist/cli.js fixtures/vulnerable-app -o vibeaudit-report.html)",
+      "Bash(start vibeaudit-report.html)",
+      "Bash(node dist/cli.js fixtures/vulnerable-app --format json -o vibeaudit-report.json)",
+      "Bash(node -e \"const r = JSON.parse\\(require\\('fs'\\).readFileSync\\('vibeaudit-report.json','utf8'\\)\\); console.log\\('score:', r.score, '| findings:', r.findings.length, '| critical:', r.summary.critical, '| keys:', Object.keys\\(r\\).join\\(', '\\)\\)\")",
+      "Bash(node dist/cli.js fixtures/vulnerable-app --fail-on critical)",
+      "Bash(echo \"exit code: $?\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(mkdir -p /tmp/clean-app)",
+      "Bash(node dist/cli.js /tmp/clean-app --fail-on low)",
+      "Bash(npm pack:*)",
+      "WebFetch(domain:mcp-playground.anshulbuilds.xyz)",
+      "Bash(npx next:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(taskkill //PID 4032 //F)"
+    ]
+  }
+}
