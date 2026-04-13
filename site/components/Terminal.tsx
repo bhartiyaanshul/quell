@@ -3,7 +3,7 @@
 import { useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
-const COMMAND = "npx frisk ./my-startup-app";
+const COMMAND = "npx friskit ./my-startup-app";
 
 interface Line {
   text: string;
@@ -33,7 +33,7 @@ const OUTPUT_LINES: Line[] = [
   { text: "", className: "", delay: 3000 },
   { text: "SEVERITY_LINE", className: "__severity__", delay: 3200 },
   { text: "", className: "", delay: 3400 },
-  { text: "  \u2713 Report written to frisk-report.html", className: "text-emerald-400", delay: 3600 },
+  { text: "  \u2713 Report written to friskit-report.html", className: "text-emerald-400", delay: 3600 },
 ];
 
 export default function Terminal() {

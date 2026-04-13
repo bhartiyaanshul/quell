@@ -48,7 +48,7 @@ function scoreColor(score: number): (s: string) => string {
 const program = new Command();
 
 program
-  .name('frisk')
+  .name('friskit')
   .description('Frisk your vibe-coded app before someone else does.')
   .version(VERSION)
   .argument('[target]', 'path to the project to scan', '.')
@@ -201,7 +201,7 @@ program
     // Write report
     const format = options.format as OutputFormat;
     const failOn = options.failOn?.toUpperCase() as Severity | undefined;
-    const outputPath = options.output ?? `frisk-report.${format}`;
+    const outputPath = options.output ?? `friskit-report.${format}`;
 
     if (format === 'html') {
       const reportPath = writeHtmlReport(result, outputPath);

@@ -30,14 +30,14 @@ function CopyBtn({ text }: { text: string }) {
 }
 
 const COMMANDS = [
-  { label: "Scan a directory", cmd: "npx frisk ./my-app" },
-  { label: "Custom output", cmd: "npx frisk ./my-app -o report.html" },
-  { label: "JSON for CI", cmd: "npx frisk ./my-app --format json" },
-  { label: "Fail on HIGH+", cmd: "npx frisk ./my-app --fail-on high" },
+  { label: "Scan a directory", cmd: "npx friskit ./my-app" },
+  { label: "Custom output", cmd: "npx friskit ./my-app -o report.html" },
+  { label: "JSON for CI", cmd: "npx friskit ./my-app --format json" },
+  { label: "Fail on HIGH+", cmd: "npx friskit ./my-app --fail-on high" },
 ];
 
 const OPTIONS = [
-  { flag: "-o, --output <path>", desc: "Report file path", def: "frisk-report.html" },
+  { flag: "-o, --output <path>", desc: "Report file path", def: "friskit-report.html" },
   { flag: "-f, --format <fmt>", desc: "Output format: html or json", def: "html" },
   { flag: "--fail-on <severity>", desc: "Exit 1 if findings at or above", def: "\u2014" },
   { flag: "-V, --version", desc: "Print version number", def: "\u2014" },
@@ -134,12 +134,12 @@ export default function Install() {
                 ci.yml
               </span>
               <CopyBtn
-                text={`- name: Security scan\n  run: npx frisk . --format json --fail-on high`}
+                text={`- name: Security scan\n  run: npx friskit . --format json --fail-on high`}
               />
             </div>
             <pre className="px-5 py-5 font-mono text-sm text-slate-300 overflow-x-auto leading-relaxed">
               {`- name: Security scan
-  run: npx frisk . --format json --fail-on high`}
+  run: npx friskit . --format json --fail-on high`}
             </pre>
           </div>
           <div className="mt-4 flex justify-center gap-8 text-xs text-va-faint">

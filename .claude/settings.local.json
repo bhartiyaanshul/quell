@@ -23,7 +23,9 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(netstat -ano)",
       "Bash(findstr :3000)",
-      "Bash(taskkill //PID 4032 //F)"
+      "Bash(taskkill //PID 4032 //F)",
+      "Bash(node dist/cli.js --help)",
+      "Bash(npm pkg:*)"
     ]
   }
 }

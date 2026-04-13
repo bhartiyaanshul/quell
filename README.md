@@ -2,7 +2,7 @@
 
 > Frisk your vibe-coded app before someone else does.
 
-[![npm version](https://img.shields.io/npm/v/frisk)](https://www.npmjs.com/package/frisk)
+[![npm version](https://img.shields.io/npm/v/friskit)](https://www.npmjs.com/package/friskit)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-green)](https://nodejs.org)
 
@@ -11,7 +11,7 @@ A zero-config CLI security scanner for apps built with Cursor, Lovable, Bolt, v0
 **One command. Sixty seconds. A report card with severity-ranked findings and a plain-English fix for each one.**
 
 ```bash
-npx frisk ./my-app
+npx friskit ./my-app
 ```
 
 ---
@@ -26,11 +26,11 @@ AI writes code fast. It doesn't write code safe. If you shipped something with a
 
 ```bash
 # Run directly (no install)
-npx frisk ./my-app
+npx friskit ./my-app
 
 # Or install globally
-npm install -g frisk
-frisk ./my-app
+npm install -g friskit
+friskit ./my-app
 ```
 
 Requires **Node.js 20+**.
@@ -39,26 +39,26 @@ Requires **Node.js 20+**.
 
 ```bash
 # Scan a directory
-frisk ./my-app
+friskit ./my-app
 
 # Custom output path
-frisk ./my-app --output report.html
+friskit ./my-app --output report.html
 
 # JSON output (for CI pipelines)
-frisk ./my-app --format json
+friskit ./my-app --format json
 
 # Fail CI if HIGH or above findings exist
-frisk ./my-app --fail-on high
+friskit ./my-app --fail-on high
 
 # Combine flags
-frisk ./my-app --format json --output results.json --fail-on critical
+friskit ./my-app --format json --output results.json --fail-on critical
 ```
 
 ### CLI Options
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `-o, --output <path>` | Report file path | `frisk-report.html` |
+| `-o, --output <path>` | Report file path | `friskit-report.html` |
 | `-f, --format <fmt>` | Output format: `html` or `json` | `html` |
 | `--fail-on <sev>` | Exit code 1 if findings at this severity or above (`critical`, `high`, `medium`, `low`) | - |
 | `-V, --version` | Print version | - |
@@ -123,7 +123,7 @@ The report is a single `.html` file with everything inlined -- no external depen
 
 ```yaml
 - name: Security scan
-  run: npx frisk . --format json --fail-on high
+  run: npx friskit . --format json --fail-on high
 ```
 
 ### Exit Codes

@@ -1,10 +1,10 @@
 {
-  "name": "frisk",
+  "name": "friskit",
   "version": "0.1.0",
   "description": "Frisk your vibe-coded app before someone else does.",
   "type": "module",
   "bin": {
-    "frisk": "./dist/cli.js"
+    "friskit": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,7 +14,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -39,7 +41,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Bhartiyaanshul/vibeaudit"
+    "url": "git+https://github.com/Bhartiyaanshul/vibeaudit.git"
   },
   "homepage": "https://vibeaudit.anshulbuilds.xyz",
   "bugs": {

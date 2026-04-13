@@ -18,7 +18,7 @@ export default function Hero() {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText("npx frisk ./my-app");
+    navigator.clipboard.writeText("npx friskit ./my-app");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -83,7 +83,7 @@ export default function Hero() {
             >
               <span className="text-violet-600">$</span>
               <span className="text-va-text/70 group-hover:text-va-text transition-colors">
-                npx frisk ./my-app
+                npx friskit ./my-app
               </span>
               {copied ? (
                 <svg className="w-4 h-4 text-violet-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
