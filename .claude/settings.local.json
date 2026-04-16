@@ -25,7 +25,23 @@
       "Bash(findstr :3000)",
       "Bash(taskkill //PID 4032 //F)",
       "Bash(node dist/cli.js --help)",
-      "Bash(npm pkg:*)"
+      "Bash(npm pkg:*)",
+      "Bash(poetry install:*)",
+      "Bash(where poetry:*)",
+      "Bash(python -m poetry --version)",
+      "Bash(pip show:*)",
+      "Read(//c/Users/anshul/AppData/Local/Programs/Python//**)",
+      "Bash(pip --version)",
+      "Bash(pipx --version)",
+      "Bash(python -m pip install pipx)",
+      "Bash(python -m pipx --version)",
+      "Bash(python -m pipx install poetry)",
+      "Bash(export PATH=\"$PATH:/c/Users/anshul/.local/bin\")",
+      "Bash(poetry --version)",
+      "Bash(poetry run:*)",
+      "Bash(pip index:*)",
+      "Bash(poetry update:*)",
+      "Bash(poetry build:*)"
     ]
   }
 }
