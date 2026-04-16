@@ -31,6 +31,7 @@ aiosqlite = ">=0.17"   # async SQLite driver for SQLAlchemy asyncio
 keyring = ">=24.0"
 questionary = ">=2.0"
 httpx = ">=0.27"
+litellm = ">=1.40"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
@@ -91,6 +92,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["questionary"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["litellm"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
