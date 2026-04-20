@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# Opt into Node 24 for JavaScript-based actions.  GitHub flagged the
+# v4 / v5 majors as Node-20 and deprecated in Sept 2025; this variable
+# lets the same action versions run under the Node 24 runtime without
+# waiting for every maintainer to cut a new major.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,7 +21,7 @@ jobs:
         python-version: ["3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

@@ -6,6 +6,70 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.1] — 2026-04-21
+
+Patch release covering CI + packaging + documentation fixes that
+landed after `v0.1.0` was tagged.  No breaking changes.
+
+### Added
+
+- **Landing page.** Next.js 14 + TailwindCSS + Framer Motion
+  marketing site under `landing/`.  Dark-first palette, word-by-word
+  hero reveal, live typing terminal demo, scroll-triggered pipeline
+  animation, mouse-follow feature highlight, animated install tabs.
+  Deploys as a static export to any host; dev server runs on
+  `localhost:3000`.
+- **README v2.** Hero banner SVG, `docs/media/flow-diagram.svg`,
+  mermaid architecture + pipeline diagrams (GitHub-native), 2x2
+  screenshot grid for the four main commands, tool + skill tables,
+  FAQ section, GitHub-native `> [!NOTE]` alerts throughout.  No
+  emojis — typography carries the visual hierarchy.
+
+### Changed
+
+- **Install section** is now stacked per-channel (curl / npm /
+  Homebrew / pipx / binary) with fenced code blocks instead of an
+  HTML table.  Long URLs no longer push the page into horizontal
+  scroll.
+- **CI pipelines** opt into the Node 24 runtime for JavaScript-based
+  actions via the `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` env
+  variable (Node 20 was deprecated in Sept 2025).  Bumped
+  `actions/checkout@v4` to `@v5` across all three workflows.
+- **Landing page port** defaults to `3000` (was 3737) to match the
+  Next.js convention.
+
+### Fixed
+
+- **Terminal clipping** in the landing hero on narrow viewports — the
+  body used a fixed `h-[320px] overflow-hidden` that cut off the last
+  output line when text wrapped.  Now `min-h-[360px]` with no clip.
+- **MetaMask dev overlay** popups ("Failed to connect to MetaMask")
+  no longer interrupt the landing page.  A sync inline script in the
+  layout `<head>` swallows errors originating from
+  `chrome-extension://` URLs in the capture phase before Next's dev
+  overlay sees them.
+- **CI: ruff version drift.** Pinned `ruff = "~0.15.11"` so local
+  and CI install the same formatter version and produce byte-identical
+  output.  Previously `^0.6` meant CI resolved 0.6.x while local had
+  0.15.
+- **CI: Windows poetry not recognised.** `build-binaries.yml` now
+  uses `python -m pip install .` instead of Poetry, avoiding the
+  PowerShell PATH issue with `snok/install-poetry@v1`.
+- **CI: macOS Intel runner starvation.** Dropped the `macos-13` x86_64
+  build matrix entry (GitHub is draining those runners).  Ship arm64
+  on `macos-latest` plus Linux x86_64 and Windows x86_64.
+- **CI: binary smoke-test SIGPIPE.** The Unix smoke-test piped
+  `quell --help` to `head -5` which triggered SIGPIPE under
+  `set -eo pipefail`.  Dropped the pipe.
+- **Windows UnicodeEncodeError on `quell --help`.** Rich couldn't
+  encode the `→` arrow through `cp1252`.  Added UTF-8 reconfigure
+  in `quell/__main__.py` and replaced stray arrows with ASCII `->`
+  in CLI docstrings.
+
+## [0.1.0] — 2026-04-20
+
 ### Added
 
 - **Phase 7 — Agent system.** `BaseAgent` ABC, `AgentState` (Pydantic v2),
@@ -48,8 +112,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `ruff check`, `ruff format --check`, and `mypy --strict` all clean.
 - `pytest tests/ -q` green across unit + e2e suites.
 
-## [0.1.0] — 2026-04-20
-
-Initial pre-alpha release covering Phases 1-15.  See the section above
-for the full feature set.  Phase 16 (public launch) is tracked
+Initial pre-alpha release covering Phases 1-15.  See the feature list
+above for the full scope.  Phase 16 (public launch) is tracked
 separately in `docs/LAUNCH.md`.

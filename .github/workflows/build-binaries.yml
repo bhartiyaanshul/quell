@@ -19,6 +19,10 @@ on:
 permissions:
   contents: write   # needed for upload-release-asset on tag builds
 
+env:
+  # Opt JS-based actions into Node 24 (v20 deprecated Sept 2025).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   build:
     name: ${{ matrix.os }} / ${{ matrix.arch }}
@@ -41,7 +45,7 @@ jobs:
             asset: quell-Windows-x86_64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-python@v5
         with:

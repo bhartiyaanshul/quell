@@ -26,7 +26,7 @@ class Quell < Formula
 
   desc "Open-source multi-agent incident response system"
   homepage "https://github.com/bhartiyaanshul/quell"
-  url "https://files.pythonhosted.org/packages/.../quell-agent-0.1.0.tar.gz"
+  url "https://files.pythonhosted.org/packages/.../quell-agent-0.1.1.tar.gz"
   sha256 "REPLACE_WITH_ACTUAL_SHA256_AFTER_PYPI_PUBLISH"
   license "Apache-2.0"
 

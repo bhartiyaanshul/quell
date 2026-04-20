@@ -5,11 +5,15 @@ on:
     tags:
       - "v*"
 
+env:
+  # Opt JS-based actions into Node 24 (v20 deprecated Sept 2025).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-python@v5
         with:
