@@ -29,12 +29,8 @@ jobs:
         include:
           - os: macos
             arch: arm64
-            runner: macos-14           # Apple silicon runner
+            runner: macos-latest
             asset: quell-Darwin-arm64
-          - os: macos
-            arch: x86_64
-            runner: macos-13           # Intel runner
-            asset: quell-Darwin-x86_64
           - os: linux
             arch: x86_64
             runner: ubuntu-latest
@@ -51,44 +47,44 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: "1.8.3"
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
+      # Plain pip — Poetry's install action has historically had PATH
+      # issues on PowerShell, and we don't need Poetry for a build.
       - name: Install project + PyInstaller
         run: |
-          poetry install --no-interaction
-          poetry run pip install pyinstaller
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install pyinstaller
 
       - name: Build binary
         working-directory: packaging/pyinstaller
-        run: poetry run pyinstaller quell.spec --clean --noconfirm
+        run: pyinstaller quell.spec --clean --noconfirm
 
-      - name: Smoke-test the binary
+      - name: Smoke-test the binary (Unix)
         if: matrix.os != 'windows'
+        shell: bash
         run: |
           ./packaging/pyinstaller/dist/quell/quell --version
           ./packaging/pyinstaller/dist/quell/quell --help | head -5
 
       - name: Smoke-test the binary (Windows)
         if: matrix.os == 'windows'
+        shell: pwsh
         run: |
           .\packaging\pyinstaller\dist\quell\quell.exe --version
           .\packaging\pyinstaller\dist\quell\quell.exe --help
 
-      - name: Package archive (tar.gz, non-Windows)
+      - name: Package archive (tar.gz, Unix)
         if: matrix.os != 'windows'
         working-directory: packaging/pyinstaller/dist
-        run: tar -czf "../../../${{ matrix.asset }}.tar.gz" quell
+        shell: bash
+        run: tar -czf "${{ github.workspace }}/${{ matrix.asset }}.tar.gz" quell
 
       - name: Package archive (zip, Windows)
         if: matrix.os == 'windows'
         working-directory: packaging/pyinstaller/dist
         shell: pwsh
-        run: Compress-Archive -Path quell -DestinationPath "../../../${{ matrix.asset }}.zip"
+        run: |
+          Compress-Archive -Path quell -DestinationPath "${{ github.workspace }}\${{ matrix.asset }}.zip"
 
       - name: Upload artifact for inspection
         uses: actions/upload-artifact@v4
