@@ -1,0 +1,20 @@
+# deps
+node_modules/
+.pnp
+.pnp.js
+
+# build
+.next/
+out/
+build/
+dist/
+
+# misc
+.DS_Store
+*.log
+.env.local
+.env*.local
+next-env.d.ts
+
+# typescript
+*.tsbuildinfo

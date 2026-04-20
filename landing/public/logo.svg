@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="ember" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fcd34d"/>
+      <stop offset="55%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fb923c" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="url(#glow)"/>
+  <!-- Outer ring -->
+  <circle cx="64" cy="64" r="46" stroke="url(#ember)" stroke-width="2.5" opacity="0.55"/>
+  <!-- Inner shield-like Q -->
+  <path d="M64 22 L104 40 V66 C104 87 87 101 64 108 C41 101 24 87 24 66 V40 Z"
+        stroke="url(#ember)" stroke-width="3" fill="rgba(251,146,60,0.05)"/>
+  <!-- Ember dot -->
+  <circle cx="86" cy="86" r="8" fill="url(#ember)"/>
+  <circle cx="86" cy="86" r="14" fill="none" stroke="url(#ember)" stroke-width="1.5" opacity="0.5"/>
+</svg>
