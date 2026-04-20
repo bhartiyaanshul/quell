@@ -36,6 +36,10 @@ class LLMError(QuellError):
     """LLM communication or parsing error."""
 
 
+class SkillError(QuellError):
+    """Skill file parsing or loading error."""
+
+
 __all__ = [
     "QuellError",
     "ConfigError",
@@ -44,4 +48,5 @@ __all__ = [
     "ToolError",
     "SandboxError",
     "LLMError",
+    "SkillError",
 ]

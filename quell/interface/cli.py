@@ -59,4 +59,68 @@ def show_version() -> None:
     typer.echo(f"quell-agent {__version__}")
 
 
-__all__ = ["init", "doctor", "show_version"]
+@app.command()
+def watch(
+    path: Annotated[
+        Path | None,
+        typer.Option(
+            "--path",
+            "-p",
+            help="Project directory to watch (defaults to current directory).",
+        ),
+    ] = None,
+) -> None:
+    """Start the monitor → detector → agent investigation loop."""
+    import asyncio
+
+    from quell.config.loader import load_config
+    from quell.watch import watch as run_watch
+
+    config = load_config(local_dir=path, inject_secrets=True)
+    try:
+        asyncio.run(run_watch(config))
+    except KeyboardInterrupt:
+        typer.echo("\n(quell watch: interrupted)")
+
+
+@app.command()
+def history(
+    limit: Annotated[int, typer.Option("--limit", "-n", help="Max rows to show.")] = 10,
+) -> None:
+    """Show the most recent incidents."""
+    import asyncio
+
+    from quell.interface.history import print_history
+
+    asyncio.run(print_history(limit))
+
+
+@app.command()
+def show(incident_id: str) -> None:
+    """Show details of a single incident by ID."""
+    import asyncio
+
+    from quell.interface.history import print_incident
+
+    asyncio.run(print_incident(incident_id))
+
+
+@app.command()
+def stats() -> None:
+    """Show aggregate incident statistics."""
+    import asyncio
+
+    from quell.interface.history import print_stats
+
+    asyncio.run(print_stats())
+
+
+__all__ = [
+    "init",
+    "doctor",
+    "show_version",
+    "watch",
+    "history",
+    "show",
+    "stats",
+]

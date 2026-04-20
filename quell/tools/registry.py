@@ -115,4 +115,19 @@ def clear_registry() -> None:
     _REGISTRY.clear()
 
 
-__all__ = ["register_tool", "get_tool", "list_tools", "clear_registry"]
+def unregister_tool(name: str) -> None:
+    """Remove a single tool from the registry if present.
+
+    Used by the built-in bootstrap to re-run ``@register_tool`` decorators
+    after a ``clear_registry()`` call in another test module.
+    """
+    _REGISTRY.pop(name, None)
+
+
+__all__ = [
+    "register_tool",
+    "get_tool",
+    "list_tools",
+    "clear_registry",
+    "unregister_tool",
+]

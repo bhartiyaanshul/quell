@@ -122,8 +122,10 @@ async def test_execute_sandbox_tool_without_sandbox_runs_locally() -> None:
     assert result.metadata.get("_ran_locally") is True
 
 
-async def test_execute_sandbox_tool_with_url_returns_stub_failure() -> None:
-    """When a sandbox URL is provided (Phase 11 not wired), returns a stub failure."""
+async def test_execute_sandbox_tool_with_url_reports_http_failure() -> None:
+    """When a sandbox URL is provided but no server is listening, the Phase
+    11 HTTP dispatch path surfaces the connection error as a typed
+    :class:`ToolResult` failure (never raises)."""
 
     @register_tool(
         name="remote_op",
@@ -134,13 +136,14 @@ async def test_execute_sandbox_tool_with_url_returns_stub_failure() -> None:
         return ToolResult.success("remote_op", "would run remotely")
 
     inv = ToolInvocation(name="remote_op", parameters={}, raw_xml="")
+    # Use a port that is almost certainly not listening.
     result = await execute_tool(
         inv,
-        sandbox_url="http://localhost:48081",
+        sandbox_url="http://127.0.0.1:1",
         sandbox_token="tok",
     )
     assert result.ok is False
-    assert "Phase 11" in result.error
+    assert "Sandbox tool server" in result.error
 
 
 # ---------------------------------------------------------------------------

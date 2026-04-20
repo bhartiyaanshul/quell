@@ -29,9 +29,9 @@ def test_error_hierarchy() -> None:
         LLMError,
     )
     for subclass in subclasses:
-        assert issubclass(
-            subclass, QuellError
-        ), f"{subclass.__name__} must subclass QuellError"
+        assert issubclass(subclass, QuellError), (
+            f"{subclass.__name__} must subclass QuellError"
+        )
 
 
 def test_logger_setup_does_not_raise() -> None:

@@ -126,7 +126,7 @@ class ResourceLimitsConfig(BaseModel):
 class SandboxConfig(BaseModel):
     """Docker sandbox image and resource configuration."""
 
-    image: str = "ghcr.io/quellhq/quell-sandbox:latest"
+    image: str = "ghcr.io/bhartiyaanshul/quell-sandbox:latest"
     limits: ResourceLimitsConfig = Field(default_factory=ResourceLimitsConfig)
     network_whitelist: list[str] = Field(default_factory=list)
     idle_timeout_seconds: int = 600

@@ -23,6 +23,8 @@ import os
 from collections.abc import Callable, Coroutine
 from typing import Any
 
+import httpx
+
 from quell.llm.types import ToolInvocation
 from quell.tools.arguments import coerce_arguments
 from quell.tools.registry import get_tool
@@ -122,13 +124,15 @@ async def _execute_via_sandbox(
 ) -> ToolResult:
     """Route a sandbox tool call to the tool server, or fall back locally.
 
-    Phase 6 stub: if no sandbox URL is configured (sandbox not yet started),
-    attempt local execution so that unit tests can exercise sandbox-flagged
-    tools without a running Docker container.
+    When ``sandbox_url`` / ``sandbox_token`` are not configured (e.g. unit
+    tests running without Docker) the tool is executed locally and a
+    ``_ran_locally`` flag is added to the result metadata.
+
+    When configured, the call is POSTed to the tool server inside the
+    sandbox, which runs the tool and returns a serialised ``ToolResult``.
     """
     if not sandbox_url or not sandbox_token:
-        # Graceful fallback: run locally with a warning note in metadata.
-        # In Phase 11 this path will issue an HTTP POST to the tool server.
+        # Graceful fallback: run locally with a note in metadata.
         try:
             result: ToolResult = await fn(**kwargs)
             return ToolResult(
@@ -145,11 +149,48 @@ async def _execute_via_sandbox(
                 f"Sandbox tool ran locally and raised: {exc}",
             )
 
-    # Full HTTP dispatch (wired in Phase 11).
-    return ToolResult.failure(
-        tool_name,
-        "Sandbox tool server HTTP dispatch not yet implemented (Phase 11).",
+    agent_id = getattr(agent_state, "agent_id", "") if agent_state else ""
+    # The tool server expects all arg values as strings — coerce back from
+    # typed to string for wire transport; the server re-coerces per tool
+    # metadata on the other side.
+    str_args = {k: _stringify(v) for k, v in kwargs.items()}
+    payload: dict[str, object] = {
+        "tool_name": tool_name,
+        "args": str_args,
+        "agent_id": agent_id,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{sandbox_url.rstrip('/')}/execute",
+                json=payload,
+                headers={"Authorization": f"Bearer {sandbox_token}"},
+            )
+    except httpx.HTTPError as exc:
+        return ToolResult.failure(tool_name, f"Sandbox tool server HTTP error: {exc}")
+
+    if resp.status_code != 200:
+        return ToolResult.failure(
+            tool_name,
+            f"Sandbox tool server returned HTTP {resp.status_code}: {resp.text[:200]}",
+        )
+
+    data = resp.json()
+    return ToolResult(
+        tool_name=str(data.get("tool_name", tool_name)),
+        ok=bool(data.get("ok", False)),
+        output=str(data.get("output", "")),
+        error=str(data.get("error", "")),
+        metadata=dict(data.get("metadata", {})),
+        truncated=bool(data.get("truncated", False)),
     )
+
+
+def _stringify(value: object) -> str:
+    """Convert a coerced argument back to its string wire form."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
 
 
 __all__ = ["execute_tool"]

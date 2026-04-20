@@ -1,0 +1,10 @@
+2026-04-20T10:00:00Z INFO server starting
+2026-04-20T10:00:02Z INFO listening on :8080
+2026-04-20T10:00:15Z INFO GET /health 200 3ms
+2026-04-20T10:02:45Z ERROR TypeError: Cannot read properties of null (reading 'id') at /api/checkout:42
+2026-04-20T10:02:45Z ERROR stack: at processOrder (src/checkout.ts:42:18)
+2026-04-20T10:02:46Z ERROR stack: at POST /api/checkout (src/routes/checkout.ts:17:5)
+2026-04-20T10:03:12Z ERROR TypeError: Cannot read properties of null (reading 'id') at /api/checkout:42
+2026-04-20T10:03:12Z ERROR stack: at processOrder (src/checkout.ts:42:18)
+2026-04-20T10:04:33Z INFO GET /health 200 2ms
+2026-04-20T10:05:01Z ERROR TypeError: Cannot read properties of null (reading 'id') at /api/checkout:42

@@ -19,9 +19,29 @@ app = typer.Typer(
 )
 
 
+def _print_version(value: bool) -> None:
+    """Typer callback that prints the version and exits when --version is given."""
+    if value:
+        typer.echo(f"quell-agent {__version__}")
+        raise typer.Exit()
+
+
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context) -> None:
+def main(
+    ctx: typer.Context,
+    version: bool = typer.Option(  # noqa: B008 — Typer option factory pattern
+        False,
+        "--version",
+        "-V",
+        help="Show version and exit.",
+        is_eager=True,
+        callback=_print_version,
+    ),
+) -> None:
     """Quell — autonomous incident response for production systems."""
+    # ``version`` handled by the eager callback; consume it so mypy/ruff
+    # don't complain about the unused parameter.
+    _ = version
     if ctx.invoked_subcommand is None:
         typer.echo(f"Quell v{__version__} — run `quell --help` for commands")
 
