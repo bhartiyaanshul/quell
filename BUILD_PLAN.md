@@ -651,7 +651,7 @@ then public launch on Hacker News + X + Product Hunt.
 - [ ] `quell watch` runs against a local log file and spawns an agent
 - [ ] Docker sandbox image pushed to `ghcr.io/bhartiyaanshul/quell-sandbox:latest`
 - [ ] README has a 90-second demo video linked
-- [ ] `quell.dev` or `getquell.dev` domain registered and redirects to GitHub
+- [ ] `quell.anshulbuilds.xyz` DNS record live and redirects to GitHub
 - [ ] Discord server created, link in README
 - [ ] Hacker News: "Show HN: Quell – open-source autonomous on-call engineer"
 
