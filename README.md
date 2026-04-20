@@ -25,41 +25,41 @@
 ---
 
 > [!NOTE]
-> **Quell watches your production logs, investigates incidents via LLM-backed agents running inside a Docker sandbox, and produces a structured root-cause report with a proposed fix.**  Your engineers wake up to a draft PR, not a page.
+> **Quell watches your production logs, investigates incidents via LLM-backed agents running inside a Docker sandbox, and produces a structured root-cause report with a proposed fix.** Your engineers wake up to a draft PR, not a page.
 
 ## Why Quell?
 
 <table>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### Before Quell
 
-- 3am alert &rarr; bleary-eyed engineer
-- 10 minutes just to find the right log file
-- Another 15 grepping for the stack trace
-- Another 20 tracing through five services
-- By the time root cause is clear, the incident's an hour old
-- The draft PR gets written tomorrow (if at all)
+- 3am alert, bleary-eyed engineer.
+- 10 minutes finding the right log file.
+- Another 15 grepping for the stack trace.
+- Another 20 tracing through five services.
+- By the time root cause is clear, the incident is an hour old.
+- The draft PR gets written tomorrow (if at all).
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
 ### With Quell
 
-- Alert fires &rarr; autonomous investigation starts
-- `IncidentCommander` reads logs, greps code, traces git history
-- Specialist subagents work in parallel via `asyncio.Queue`
-- A root-cause report lands in ~30 seconds
-- Draft PR proposal waiting for human review when you sign on
-- You approve, merge, go back to sleep
+- Alert fires, autonomous investigation starts.
+- `IncidentCommander` reads logs, greps code, traces git history.
+- Specialist subagents work in parallel via `asyncio.Queue`.
+- A root-cause report lands in ~30 seconds.
+- Draft PR proposal waits for human review when you sign on.
+- You approve, merge, go back to sleep.
 
 </td>
 </tr>
 </table>
 
 > [!IMPORTANT]
-> **Quell never auto-merges.**  Every proposed fix is a **draft PR** that requires a human to review and merge.  Safety over speed.
+> **Quell never auto-merges.** Every proposed fix is a **draft PR** that requires a human to review and merge. Safety over speed.
 
 ---
 
@@ -76,7 +76,7 @@
 </p>
 
 <details>
-<summary><b>No media yet? Here's the textual storyboard of the same run.</b></summary>
+<summary><b>No media yet? Here is the textual storyboard of the same run.</b></summary>
 
 ```console
 $ quell watch
@@ -88,82 +88,60 @@ $ quell watch
 10:02:49  INFO  tool: code_read src/checkout.ts lines 40-50
 10:02:52  INFO  tool: git_blame src/checkout.ts:42
 10:02:58  INFO  agent: finish_incident -- null-deref on order.user
-✓ incident inc_a1b2c3 resolved in 13s -- see `quell show inc_a1b2c3`
+incident inc_a1b2c3 resolved in 13s -- see `quell show inc_a1b2c3`
 ```
 
 </details>
 
 ---
 
-## Install in 10 seconds
+## Install
 
-Pick whichever channel fits your environment.  All five install the same binary.
+Pick the channel that fits your environment. All five install the same binary.
 
-<table>
-<tr>
-<th width="25%">Channel</th>
-<th>Command</th>
-<th width="20%">Best for</th>
-</tr>
-<tr>
-<td>🛠️ <strong>curl</strong></td>
-<td>
+### curl
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bhartiyaanshul/quell/main/install.sh | bash
 ```
 
-</td>
-<td>Any POSIX shell — <em>works today</em></td>
-</tr>
-<tr>
-<td>📦 <strong>npm</strong></td>
-<td>
+Any POSIX shell. Probes for a prebuilt binary first, falls back to pipx + source automatically. **Works today.**
+
+### npm
 
 ```bash
 npm i -g quell-agent
 ```
 
-</td>
-<td>JS devs — zero Python knowledge</td>
-</tr>
-<tr>
-<td>🍺 <strong>Homebrew</strong></td>
-<td>
+For JavaScript-oriented developers. The postinstall hook downloads the native binary, so nothing on the Python side is needed.
+
+### Homebrew
 
 ```bash
 brew install bhartiyaanshul/quell/quell
 ```
 
-</td>
-<td>macOS / Linux brew users</td>
-</tr>
-<tr>
-<td>🐍 <strong>pipx</strong></td>
-<td>
+For macOS and Linux brew users. Installs into `/opt/homebrew/bin` (Apple silicon) or `/usr/local/bin` (Intel / Linux).
+
+### pipx
 
 ```bash
 pipx install quell-agent
 ```
 
-</td>
-<td>Python users</td>
-</tr>
-<tr>
-<td>⚡ <strong>Binary</strong></td>
-<td>
+For Python users who already have pipx. Creates an isolated venv under `~/.local`.
+
+### Standalone binary
 
 ```bash
-curl -sSL https://github.com/bhartiyaanshul/quell/releases/latest/download/quell-$(uname -s)-$(uname -m).tar.gz | tar xz -C /usr/local/bin
+curl -sSL https://github.com/bhartiyaanshul/quell/releases/latest/download/quell-$(uname -s)-$(uname -m).tar.gz \
+  | tar xz -C /usr/local/bin
 ```
 
-</td>
-<td>Zero runtime — no Python needed</td>
-</tr>
-</table>
+No runtime at all. The archive bundles CPython and every dependency. Available for macOS arm64, Linux x86_64, and Windows x86_64.
 
 > [!TIP]
-> The curl installer is live today — it probes for a prebuilt binary first and falls back to pipx + source automatically.  The other four channels activate the moment the first `v0.1.0` tag ships.  Full cascade in [`packaging/README.md`](packaging/README.md).
+> Today only the curl installer runs out of the box. The other four channels activate the moment the first `v0.1.0` tag ships. Full cascade in [`packaging/README.md`](packaging/README.md).
 
 ---
 
@@ -196,8 +174,8 @@ key in your OS keychain, writes `.quell/config.toml`.
 
 <img src="./docs/media/quell-doctor.png" alt="quell doctor output with every check green" />
 
-Verifies Python 3.12+, git, Docker daemon, config parse, and LLM key
-— one coloured table with exit code 0/1 for CI use.
+Verifies Python 3.12+, git, Docker daemon, config parse, and LLM key.
+One coloured table with exit code 0/1 for CI use.
 
 </td>
 </tr>
@@ -263,11 +241,11 @@ flowchart LR
 
 | Stage | What it does | Code |
 |-------|--------------|------|
-| **1.  Monitor** | Emits a `RawEvent` per log line / HTTP probe / Vercel or Sentry payload | [`quell/monitors/`](quell/monitors/) |
-| **2.  Detector** | Fingerprints events (normalised 16-char hex); fires on new / spike / high-severity | [`quell/detector/`](quell/detector/) |
-| **3.  Commander** | Root `IncidentCommander` reads logs, greps code, reasons — optionally spawns specialist subagents | [`quell/agents/`](quell/agents/) |
-| **4.  Sandbox** | Every code-touching tool runs inside a Docker container with your workspace mounted **read-only** | [`quell/runtime/`](quell/runtime/) · [`quell/tool_server/`](quell/tool_server/) |
-| **5.  Report** | Structured `{root_cause, evidence, proposed_fix, status}` — wraps a draft PR for human review | [`quell/tools/reporting/`](quell/tools/reporting/) |
+| 1. Monitor | Emits a `RawEvent` per log line / HTTP probe / Vercel or Sentry payload | [`quell/monitors/`](quell/monitors/) |
+| 2. Detector | Fingerprints events (normalised 16-char hex); fires on new / spike / high-severity | [`quell/detector/`](quell/detector/) |
+| 3. Commander | Root `IncidentCommander` reads logs, greps code, reasons, optionally spawns specialist subagents | [`quell/agents/`](quell/agents/) |
+| 4. Sandbox | Every code-touching tool runs inside a Docker container with your workspace mounted **read-only** | [`quell/runtime/`](quell/runtime/) · [`quell/tool_server/`](quell/tool_server/) |
+| 5. Report | Structured `{root_cause, evidence, proposed_fix, status}`, wraps a draft PR for human review | [`quell/tools/reporting/`](quell/tools/reporting/) |
 
 ---
 
@@ -276,90 +254,108 @@ flowchart LR
 <table>
 <tr>
 <td width="33%" valign="top">
-<h3>🔒 Sandboxed by default</h3>
+
+### Sandboxed by default
+
 Every tool that touches code runs inside Docker with your workspace
-mounted <strong>read-only</strong>. Per-sandbox bearer-token auth on
-the FastAPI tool server.
-<br/><br/>
-<a href="docs/architecture.md#runtime--quellruntime"><strong>docs/architecture.md →</strong></a>
+mounted **read-only**. Per-sandbox bearer-token auth on the FastAPI
+tool server.
+
+[docs/architecture.md](docs/architecture.md#runtime--quellruntime)
+
 </td>
 <td width="33%" valign="top">
-<h3>🤖 Multi-agent coordination</h3>
-<code>IncidentCommander</code> spawns specialist subagents through an
-<code>AgentGraph</code>; they exchange messages through an
-<code>asyncio.Queue</code> broker — parallel investigations, sequential
-reasoning.
-<br/><br/>
-<a href="docs/architecture.md#agents--quellagents"><strong>docs/architecture.md →</strong></a>
+
+### Multi-agent coordination
+
+`IncidentCommander` spawns specialist subagents through an
+`AgentGraph`; they exchange messages through an `asyncio.Queue` broker.
+Parallel investigations, sequential reasoning.
+
+[docs/architecture.md](docs/architecture.md#agents--quellagents)
+
 </td>
 <td width="33%" valign="top">
-<h3>🧠 Bring your own model</h3>
-Built on <strong>LiteLLM</strong> — OpenAI, Anthropic, Google Gemini,
-Ollama, or any custom endpoint. One line of TOML to switch.  No lock-in.
-<br/><br/>
-<a href="docs/configuration.md#llm--llm-provider"><strong>docs/configuration.md →</strong></a>
+
+### Bring your own model
+
+Built on **LiteLLM** — OpenAI, Anthropic, Google Gemini, Ollama, or
+any custom endpoint. One line of TOML to switch. No lock-in.
+
+[docs/configuration.md](docs/configuration.md#llm--llm-provider)
+
 </td>
 </tr>
 <tr>
 <td width="33%" valign="top">
-<h3>📘 Skill runbooks</h3>
+
+### Skill runbooks
+
 Markdown + YAML frontmatter runbooks get auto-injected into the agent's
-system prompt when their triggers match an incident.  Seven come
-bundled (Stripe, Next.js, FastAPI, Postgres, Redis, OpenAI, null-deref).
-<br/><br/>
-<a href="docs/extending.md#writing-a-skill"><strong>docs/extending.md →</strong></a>
+system prompt when their triggers match an incident. Seven come bundled
+(Stripe, Next.js, FastAPI, Postgres, Redis, OpenAI, null-deref).
+
+[docs/extending.md](docs/extending.md#writing-a-skill)
+
 </td>
 <td width="33%" valign="top">
-<h3>⚙️ Draft PRs, never auto-merge</h3>
-Every proposed fix is a draft PR. Humans review, humans merge.  No
+
+### Draft PRs, never auto-merge
+
+Every proposed fix is a draft PR. Humans review, humans merge. No
 silent changes, no 3am surprises, no trust-me-bro commits.
-<br/><br/>
-<a href="SECURITY.md"><strong>SECURITY.md →</strong></a>
+
+[SECURITY.md](SECURITY.md)
+
 </td>
 <td width="33%" valign="top">
-<h3>🛡️ No telemetry by default</h3>
-Your code, your logs, your infrastructure.  Nothing leaves your
+
+### No telemetry by default
+
+Your code, your logs, your infrastructure. Nothing leaves your
 machine unless you explicitly configure a remote monitor or LLM
-endpoint.  Telemetry is opt-in only.
-<br/><br/>
-<a href="docs/configuration.md"><strong>docs/configuration.md →</strong></a>
+endpoint. Telemetry is opt-in only.
+
+[docs/configuration.md](docs/configuration.md)
+
 </td>
 </tr>
 </table>
 
 ---
 
-## What's in the box
+## What is in the box
 
-### 🛠️ 11 built-in tools
+### 11 built-in tools
 
 | Category | Tool | What it does |
 |----------|------|--------------|
-| 📄 Code | `code_read` | Read a file (optionally with line range) |
-| 🔎 Code | `code_grep` | ripgrep-backed content search with path-traversal guard |
-| 🗂️ Git | `git_log` | Recent commits with author + timestamp |
-| 📝 Git | `git_blame` | Line-level authorship |
-| 🔀 Git | `git_diff` | Diff between refs or working tree |
-| 🌐 Monitoring | `http_probe` | Hit an HTTP endpoint, return status + headers + body |
-| 📋 Monitoring | `logs_query` | Tail a local log with substring filter |
-| 📊 Reporting | `create_incident_report` | Structured incident summary |
-| 📚 Reporting | `create_postmortem` | Blameless postmortem (Markdown) |
-| 🏁 Coordination | `agent_finish` | Subagent signals completion |
-| ✅ Coordination | `finish_incident` | Root agent closes the investigation |
+| Code | `code_read` | Read a file (optionally with line range) |
+| Code | `code_grep` | ripgrep-backed content search with path-traversal guard |
+| Git | `git_log` | Recent commits with author and timestamp |
+| Git | `git_blame` | Line-level authorship |
+| Git | `git_diff` | Diff between refs or working tree |
+| Monitoring | `http_probe` | Hit an HTTP endpoint, return status + headers + body |
+| Monitoring | `logs_query` | Tail a local log with substring filter |
+| Reporting | `create_incident_report` | Structured incident summary |
+| Reporting | `create_postmortem` | Blameless postmortem in Markdown |
+| Coordination | `agent_finish` | Subagent signals completion |
+| Coordination | `finish_incident` | Root agent closes the investigation |
 
-Plus four inter-agent tools (`create_agent`, `send_message`, `wait_for_message`, `view_graph`) added in Phase 13.
+Plus four inter-agent tools (`create_agent`, `send_message`,
+`wait_for_message`, `view_graph`) added in Phase 13.
 
-### 📘 7 bundled skill runbooks
+### 7 bundled skill runbooks
 
 | Slug | Category | Severity | Triggers when |
 |------|----------|----------|---------------|
-| `stripe-webhook-timeout` | incidents | 🔴 high | error mentions `stripe-signature` or `webhook timeout` |
-| `unhandled-null` | incidents | 🟡 medium | error mentions `NoneType`, `null is not an object`, `Cannot read propert` |
-| `openai-rate-limit` | incidents | 🔴 high | error mentions `rate_limit_exceeded`, `429`, `tokens per minute` |
-| `fastapi` | frameworks | 🟡 medium | framework is `fastapi` or error mentions `starlette`, `uvicorn` |
-| `nextjs-app-router` | frameworks | 🟡 medium | framework is `nextjs` or error mentions `server component`, `RSC` |
-| `postgres` | technologies | 🔴 high | tech stack includes `postgres`, error mentions `psycopg`, `deadlock detected` |
-| `redis` | technologies | 🟡 medium | tech stack includes `redis`, error mentions `OOM command not allowed` |
+| `stripe-webhook-timeout` | incidents | high | error mentions `stripe-signature` or `webhook timeout` |
+| `unhandled-null` | incidents | medium | error mentions `NoneType`, `null is not an object`, `Cannot read propert` |
+| `openai-rate-limit` | incidents | high | error mentions `rate_limit_exceeded`, `429`, `tokens per minute` |
+| `fastapi` | frameworks | medium | framework is `fastapi` or error mentions `starlette`, `uvicorn` |
+| `nextjs-app-router` | frameworks | medium | framework is `nextjs` or error mentions `server component`, `RSC` |
+| `postgres` | technologies | high | tech stack includes `postgres`, error mentions `psycopg`, `deadlock detected` |
+| `redis` | technologies | medium | tech stack includes `redis`, error mentions `OOM command not allowed` |
 
 Add your own by dropping a `.md` file in [`quell/skills/<category>/`](quell/skills/).
 See [**docs/extending.md**](docs/extending.md#writing-a-skill).
@@ -370,7 +366,7 @@ See [**docs/extending.md**](docs/extending.md#writing-a-skill).
 
 ```mermaid
 graph TB
-  subgraph host["🖥️  Host (your dev machine or on-call server)"]
+  subgraph host["Host (your dev machine or on-call server)"]
     CFG[("Config<br/>TOML + Pydantic")]
     MEM[("Memory<br/>SQLAlchemy async")]
     MON[Monitors] --> DET[Detector]
@@ -383,7 +379,7 @@ graph TB
     CMD -.-> MEM
   end
 
-  subgraph sandbox["🐳  Docker sandbox (per-agent)"]
+  subgraph sandbox["Docker sandbox (per-agent)"]
     TS[FastAPI tool server]
     TOOLS[11 built-in tools]
     WS[/workspace/<br/>mounted read-only/]
@@ -399,7 +395,7 @@ graph TB
   style host fill:#0a0a0f,stroke:#27272a,color:#fafafa
 ```
 
-Eight subsystems, every boundary typed:
+Eight subsystems, every boundary typed.
 
 | Subsystem | Lines of Python | Test coverage |
 |-----------|-----------------|---------------|
@@ -413,7 +409,7 @@ Eight subsystems, every boundary typed:
 | `quell/runtime/` + `quell/tool_server/` | ~400 | 15 tests |
 | **Total** | **~4 300 LoC** | **242 tests** |
 
-Deep dive: [**docs/architecture.md**](docs/architecture.md).
+Deep dive in [**docs/architecture.md**](docs/architecture.md).
 
 ---
 
@@ -423,26 +419,29 @@ Deep dive: [**docs/architecture.md**](docs/architecture.md).
 <tr>
 <td valign="top" width="33%">
 
-### 🚀 Start here
-- [**Getting started**](docs/getting-started.md)<br/>Zero to running investigation in 10 min.
-- [Installation](docs/installation.md)<br/>All 5 install paths.
-- [Troubleshooting](docs/troubleshooting.md)<br/>Common errors, one-command fixes.
+### Start here
+
+- [**Getting started**](docs/getting-started.md) — zero to running investigation in 10 min
+- [Installation](docs/installation.md) — all five install paths
+- [Troubleshooting](docs/troubleshooting.md) — common errors, one-command fixes
 
 </td>
 <td valign="top" width="33%">
 
-### 📖 Reference
-- [Commands](docs/commands.md)<br/>Every `quell` subcommand.
-- [Configuration](docs/configuration.md)<br/>`.quell/config.toml` schema.
-- [Architecture](docs/architecture.md)<br/>Subsystem deep dive.
+### Reference
+
+- [Commands](docs/commands.md) — every `quell` subcommand
+- [Configuration](docs/configuration.md) — `.quell/config.toml` schema
+- [Architecture](docs/architecture.md) — subsystem deep dive
 
 </td>
 <td valign="top" width="33%">
 
-### 🔌 Build on it
-- [Extending Quell](docs/extending.md)<br/>Add a skill or a tool.
-- [Packaging](packaging/README.md)<br/>How one tag ships to PyPI / npm / brew.
-- [Phase 16 launch](docs/LAUNCH.md)<br/>Manual launch runbook.
+### Build on it
+
+- [Extending Quell](docs/extending.md) — add a skill or a tool
+- [Packaging](packaging/README.md) — how one tag ships everywhere
+- [Phase 16 launch](docs/LAUNCH.md) — manual launch runbook
 
 </td>
 </tr>
@@ -455,40 +454,38 @@ Deep dive: [**docs/architecture.md**](docs/architecture.md).
 <details>
 <summary><b>Does Quell send my code to an LLM provider?</b></summary>
 
-Only the fragments the agent explicitly reads through its tools — and
+Only the fragments the agent explicitly reads through its tools, and
 those are gated by the sandbox, which only sees whatever is in the
-workspace you mount.  You can swap LiteLLM to a local model like
-Ollama if you don't want any code leaving your machine at all.
+workspace you mount. You can swap LiteLLM to a local model like
+Ollama if you do not want any code leaving your machine at all.
 
 </details>
 
 <details>
 <summary><b>Will Quell modify my code?</b></summary>
 
-No.  Every tool that touches the filesystem runs inside a Docker
-sandbox with the workspace mounted <strong>read-only</strong>.  Fixes
-are proposed as <strong>draft PRs</strong> only — never pushed, never
-merged — and require a human to approve.
+No. Every tool that touches the filesystem runs inside a Docker
+sandbox with the workspace mounted **read-only**. Fixes are proposed
+as **draft PRs** only, never pushed, never merged, and require a
+human to approve.
 
 </details>
 
 <details>
 <summary><b>What LLMs are supported?</b></summary>
 
-Anything LiteLLM supports — OpenAI (GPT-4o, GPT-5), Anthropic (Claude
-Haiku / Sonnet / Opus), Google Gemini, Ollama local models,
-open-weight models via any OpenAI-compatible endpoint.  Swap via one
-line of TOML.
+Anything LiteLLM supports. OpenAI (GPT-4o, GPT-5), Anthropic (Claude
+Haiku / Sonnet / Opus), Google Gemini, Ollama local models, any
+OpenAI-compatible endpoint. Swap via one line of TOML.
 
 </details>
 
 <details>
 <summary><b>How expensive is a typical investigation?</b></summary>
 
-A typical incident runs 3-7 agent iterations and consumes 15-40k
-input tokens + 1-3k output tokens.  On <code>claude-haiku-4-5</code>
-that's ~$0.01-0.03 per incident.  You set the model; you set the
-budget.
+A typical incident runs 3–7 agent iterations and consumes 15–40k input
+tokens plus 1–3k output tokens. On `claude-haiku-4-5` that is roughly
+$0.01–0.03 per incident. You set the model; you set the budget.
 
 </details>
 
@@ -496,28 +493,27 @@ budget.
 <summary><b>Does it work without Docker?</b></summary>
 
 The unit tests and the "dry run" walkthrough work without Docker.
-Real production investigations of untrusted code <em>should</em> run
-under Docker for the read-only workspace + network isolation
-guarantees.
+Real production investigations of untrusted code should run under
+Docker for the read-only workspace and network isolation guarantees.
 
 </details>
 
 <details>
 <summary><b>Is it production-ready?</b></summary>
 
-Quell is <strong>v0.1.0 pre-alpha</strong>.  Core flow works end-to-end
-(242 tests) and is API-stable, but expect rough edges around edge
-cases (non-English logs, long stack traces, rare LLM failure modes).
-Run Quell against staging first.  File issues — we respond fast.
+Quell is **v0.1.0 pre-alpha**. Core flow works end-to-end (242 tests)
+and is API-stable, but expect rough edges around non-English logs,
+long stack traces, and rare LLM failure modes. Run Quell against
+staging first. File issues and we respond fast.
 
 </details>
 
 <details>
 <summary><b>Can I self-host the dashboard?</b></summary>
 
-Today there's no dashboard — everything is CLI.  A minimal web UI is
-on the roadmap but not a v0.1 commitment.  The landing page
-(<code>landing/</code>) is marketing-only, not a dashboard.
+Today there is no dashboard. Everything is CLI. A minimal web UI is
+on the roadmap but not a v0.1 commitment. The landing page
+(`landing/`) is marketing-only, not a dashboard.
 
 </details>
 
@@ -525,38 +521,38 @@ on the roadmap but not a v0.1 commitment.  The landing page
 <summary><b>How does Quell compare to existing tools?</b></summary>
 
 Quell is not a monitoring tool (Sentry / Datadog already do that).
-It's not a chatbot (Quell is autonomous, not interactive).  It's not
-an auto-merger (humans always review).  It sits on top of your
-existing monitoring: Quell <em>consumes</em> Sentry / Vercel / log
-events, investigates the underlying cause, and produces a report.
+Not a chatbot (Quell is autonomous, not interactive). Not an
+auto-merger (humans always review). It sits on top of your existing
+monitoring: Quell consumes Sentry / Vercel / log events, investigates
+the underlying cause, and produces a report.
 
 </details>
 
 ---
 
-## Community & support
+## Community
 
 <table>
 <tr>
 <td valign="top" width="50%">
 
 ### Contribute
+
 Read [**CONTRIBUTING.md**](CONTRIBUTING.md) for the dev loop and the
 stop-gate (ruff format, ruff check, mypy strict, pytest — all four
 must pass before a merge).
 
-Good first issues are labelled on GitHub.  Drop into
+Good first issues are labelled on GitHub. Drop into
 [Discussions](https://github.com/bhartiyaanshul/quell/discussions)
-if you're not sure where to start.
+if you are not sure where to start.
 
 </td>
 <td valign="top" width="50%">
 
-### Report a bug / vulnerability
+### Report a bug or vulnerability
+
 - Regular bugs → [GitHub Issues](https://github.com/bhartiyaanshul/quell/issues)
-- Security → [private Security Advisory](https://github.com/bhartiyaanshul/quell/security/advisories/new)
-  (the advisory flow is also used for conduct reports — see
-  [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md))
+- Security → [private Security Advisory](https://github.com/bhartiyaanshul/quell/security/advisories/new) (the advisory flow is also used for conduct reports — see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md))
 
 </td>
 </tr>
@@ -568,14 +564,10 @@ if you're not sure where to start.
 
 Quell is built across 16 phases documented in [`BUILD_PLAN.md`](BUILD_PLAN.md).
 
-- ✅ **Phase 1-15** — Config, memory, monitors, LLM, tools, agents, skills,
-  detector, Docker runtime, tool server, built-in tools, agent graph,
-  end-to-end integration, polish.
-- 🔲 **Phase 16** — Public launch (manual checklist in [`docs/LAUNCH.md`](docs/LAUNCH.md)).
-- 📋 **v0.2** (planned) — Web dashboard, Slack / Discord notifiers,
-  more skill runbooks, investigation replay.
-- 📋 **v1.0** (aspirational) — Production-ready, typed per-model
-  cost budgets, multi-repo coordination.
+- **Phase 1–15 (shipped).** Config, memory, monitors, LLM, tools, agents, skills, detector, Docker runtime, tool server, built-in tools, agent graph, end-to-end integration, polish.
+- **Phase 16 (next).** Public launch. Manual checklist in [`docs/LAUNCH.md`](docs/LAUNCH.md).
+- **v0.2 (planned).** Web dashboard, Slack / Discord notifiers, more skill runbooks, investigation replay.
+- **v1.0 (aspirational).** Production-ready, typed per-model cost budgets, multi-repo coordination.
 
 ---
 
@@ -585,7 +577,7 @@ Quell is built across 16 phases documented in [`BUILD_PLAN.md`](BUILD_PLAN.md).
 # One-time editable install with dev deps
 curl -fsSL https://raw.githubusercontent.com/bhartiyaanshul/quell/main/install.sh | bash -s -- --dev
 
-# The stop-gate — all four must pass before merging
+# Stop-gate — all four must pass before merging
 poetry run ruff format quell/ tests/ --check
 poetry run ruff check  quell/ tests/
 poetry run mypy        quell/
@@ -596,7 +588,7 @@ Full dev loop in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ### Landing page
 
-The marketing site at [**quell.anshulbuilds.xyz**](https://quell.anshulbuilds.xyz) lives in [`landing/`](landing/):
+The marketing site at [**quell.anshulbuilds.xyz**](https://quell.anshulbuilds.xyz) lives in [`landing/`](landing/).
 
 ```bash
 cd landing
@@ -605,7 +597,7 @@ npm run dev      # http://localhost:3000 with hot reload
 npm run build    # produces ./out/ — deploy anywhere static
 ```
 
-Next.js 14 + TailwindCSS + Framer Motion.  See [`landing/README.md`](landing/README.md) for the component map.
+Next.js 14 + TailwindCSS + Framer Motion. See [`landing/README.md`](landing/README.md) for the component map.
 
 ---
 
