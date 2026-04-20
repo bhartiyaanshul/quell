@@ -1,0 +1,109 @@
+name: Build standalone binaries
+
+# Fires on every tag push AND every push to main (for PR verification).
+# Binaries are attached to the GitHub release that `release.yml` creates
+# on the same tag push.  Users then install with:
+#
+#   curl -sSL https://github.com/bhartiyaanshul/quell/releases/latest/download/quell-$(uname -s)-$(uname -m).tar.gz | tar xz
+#   mv quell/quell /usr/local/bin/
+#
+# The binary bundles CPython + every Python dep into a self-contained
+# directory — no Python install required on the user's machine.
+
+on:
+  push:
+    tags: ["v*"]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed for upload-release-asset on tag builds
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos
+            arch: arm64
+            runner: macos-14           # Apple silicon runner
+            asset: quell-Darwin-arm64
+          - os: macos
+            arch: x86_64
+            runner: macos-13           # Intel runner
+            asset: quell-Darwin-x86_64
+          - os: linux
+            arch: x86_64
+            runner: ubuntu-latest
+            asset: quell-Linux-x86_64
+          - os: windows
+            arch: x86_64
+            runner: windows-latest
+            asset: quell-Windows-x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: "1.8.3"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install project + PyInstaller
+        run: |
+          poetry install --no-interaction
+          poetry run pip install pyinstaller
+
+      - name: Build binary
+        working-directory: packaging/pyinstaller
+        run: poetry run pyinstaller quell.spec --clean --noconfirm
+
+      - name: Smoke-test the binary
+        if: matrix.os != 'windows'
+        run: |
+          ./packaging/pyinstaller/dist/quell/quell --version
+          ./packaging/pyinstaller/dist/quell/quell --help | head -5
+
+      - name: Smoke-test the binary (Windows)
+        if: matrix.os == 'windows'
+        run: |
+          .\packaging\pyinstaller\dist\quell\quell.exe --version
+          .\packaging\pyinstaller\dist\quell\quell.exe --help
+
+      - name: Package archive (tar.gz, non-Windows)
+        if: matrix.os != 'windows'
+        working-directory: packaging/pyinstaller/dist
+        run: tar -czf "../../../${{ matrix.asset }}.tar.gz" quell
+
+      - name: Package archive (zip, Windows)
+        if: matrix.os == 'windows'
+        working-directory: packaging/pyinstaller/dist
+        shell: pwsh
+        run: Compress-Archive -Path quell -DestinationPath "../../../${{ matrix.asset }}.zip"
+
+      - name: Upload artifact for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: |
+            ${{ matrix.asset }}.tar.gz
+            ${{ matrix.asset }}.zip
+          if-no-files-found: ignore
+
+      - name: Attach to release (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ matrix.asset }}.tar.gz
+            ${{ matrix.asset }}.zip
+          fail_on_unmatched_files: false

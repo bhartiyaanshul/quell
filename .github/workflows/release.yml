@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: "1.8.3"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Verify tag matches pyproject version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          pkg_version="$(poetry version -s)"
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "Tag $tag_version does not match pyproject version $pkg_version" >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run test suite before publishing
+        run: poetry run pytest tests/unit -q
+
+      - name: Build distribution artifacts
+        run: poetry build
+
+      - name: Publish to PyPI
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        run: poetry publish --no-interaction
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

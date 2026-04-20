@@ -5,9 +5,17 @@
 #   scoop install make   (Scoop)
 # Alternatively, run the Poetry commands directly.
 
-.PHONY: install test lint typecheck build run clean
+.PHONY: install install-cli install-dev test lint typecheck build run clean help
 
-## install: Install all dependencies via Poetry
+## install-cli: End-user install — puts `quell` on your PATH via pipx
+install-cli:
+	./scripts/install.sh
+
+## install-dev: Editable dev install (creates .venv + installs dev deps)
+install-dev:
+	./scripts/install.sh --dev
+
+## install: Install all dependencies via Poetry (legacy dev shortcut)
 install:
 	poetry install
 

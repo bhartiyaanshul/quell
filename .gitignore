@@ -55,6 +55,14 @@ Thumbs.db
 quell_runs/
 *.ndjson
 
+# Packaging build artefacts
+packaging/pyinstaller/build/
+packaging/pyinstaller/dist/
+packaging/npm/node_modules/
+packaging/npm/*.tgz
+quell-*.tar.gz
+quell-*.zip
+
 # Secrets — never commit these
 .env
 .env.*

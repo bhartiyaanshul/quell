@@ -1,0 +1,36 @@
+{
+  "name": "quell-agent",
+  "version": "0.1.0",
+  "description": "Your production's autonomous on-call — open-source multi-agent incident response.",
+  "keywords": [
+    "incident-response",
+    "sre",
+    "devops",
+    "agents",
+    "autonomous",
+    "cli"
+  ],
+  "homepage": "https://github.com/bhartiyaanshul/quell",
+  "bugs": "https://github.com/bhartiyaanshul/quell/issues",
+  "license": "Apache-2.0",
+  "author": "Anshul Bhartiya",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bhartiyaanshul/quell.git"
+  },
+  "bin": {
+    "quell": "./bin/quell.js"
+  },
+  "scripts": {
+    "postinstall": "node ./scripts/download.js"
+  },
+  "files": [
+    "bin/quell.js",
+    "scripts/download.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
