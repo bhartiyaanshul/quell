@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+
+import { ExtensionErrorFilter } from "@/components/ExtensionErrorFilter";
 import "./globals.css";
 
 const inter = Inter({
@@ -46,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
       <body className="bg-bg-base font-sans text-fg antialiased selection:bg-accent/30">
+        <ExtensionErrorFilter />
         {children}
       </body>
     </html>

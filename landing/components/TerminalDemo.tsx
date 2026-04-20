@@ -73,8 +73,10 @@ export function TerminalDemo() {
           </span>
         </div>
 
-        {/* Body */}
-        <div className="h-[320px] overflow-hidden px-5 py-4 font-mono text-[13px] leading-relaxed">
+        {/* Body — min-height keeps the terminal the right size even
+             before output has filled in, but we don't force-clip so
+             wrapped lines on narrow viewports stay readable. */}
+        <div className="min-h-[360px] px-5 py-4 font-mono text-[13px] leading-relaxed sm:min-h-[400px]">
           {/* The typed command */}
           <div className="flex items-start gap-2">
             <span className="select-none text-accent">➜</span>

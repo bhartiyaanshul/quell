@@ -4,9 +4,9 @@
   "private": true,
   "description": "Quell's marketing landing page — Next.js + Framer Motion",
   "scripts": {
-    "dev": "next dev -p 3737",
+    "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start -p 3737",
+    "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },

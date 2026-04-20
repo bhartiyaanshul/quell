@@ -19,7 +19,7 @@ Next.js + TailwindCSS + Framer Motion marketing page served at
 ```bash
 cd landing
 npm install
-npm run dev        # http://localhost:3737
+npm run dev        # http://localhost:3000
 ```
 
 Hot-reload is on by default.  Type-check with `npm run typecheck`, lint
