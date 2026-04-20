@@ -70,7 +70,7 @@ def watch(
         ),
     ] = None,
 ) -> None:
-    """Start the monitor → detector → agent investigation loop."""
+    """Start the monitor -> detector -> agent investigation loop."""
     import asyncio
 
     from quell.config.loader import load_config

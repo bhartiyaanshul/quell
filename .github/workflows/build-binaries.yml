@@ -64,7 +64,10 @@ jobs:
         shell: bash
         run: |
           ./packaging/pyinstaller/dist/quell/quell --version
-          ./packaging/pyinstaller/dist/quell/quell --help | head -5
+          # Don't pipe to head — GitHub's ``set -eo pipefail`` bash
+          # propagates the SIGPIPE Typer sees when head closes the
+          # stream, failing the step on a successful run.
+          ./packaging/pyinstaller/dist/quell/quell --help
 
       - name: Smoke-test the binary (Windows)
         if: matrix.os == 'windows'

@@ -143,7 +143,7 @@ async def check_llm(project_dir: Path) -> CheckResult:
         return CheckResult(
             name="LLM reachable",
             ok=reachable,
-            detail=f"{url} → HTTP {resp.status_code}",
+            detail=f"{url} -> HTTP {resp.status_code}",
         )
     except Exception as exc:  # noqa: BLE001
         return CheckResult(name="LLM reachable", ok=False, detail=str(exc))
