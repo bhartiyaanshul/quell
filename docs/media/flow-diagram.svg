@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 220" role="img" aria-label="Quell investigation flow">
+  <defs>
+    <linearGradient id="flow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"  stop-color="#fb923c" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="nodeBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#12121a"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1100" height="220" fill="#0a0a0f"/>
+
+  <!-- Nodes -->
+  <g font-family="Inter, system-ui, sans-serif">
+    <!-- Monitor -->
+    <g transform="translate(40, 60)">
+      <rect width="180" height="100" rx="14" fill="url(#nodeBg)" stroke="#27272a"/>
+      <text x="20" y="34" font-size="16" font-weight="600" fill="#fafafa">Monitor</text>
+      <text x="20" y="56" font-size="12" fill="#a1a1aa">Tails logs / polls HTTP</text>
+      <text x="20" y="74" font-size="11" fill="#71717a" font-family="JetBrains Mono, monospace">RawEvent</text>
+    </g>
+
+    <!-- Detector -->
+    <g transform="translate(260, 60)">
+      <rect width="180" height="100" rx="14" fill="url(#nodeBg)" stroke="#27272a"/>
+      <text x="20" y="34" font-size="16" font-weight="600" fill="#fafafa">Detector</text>
+      <text x="20" y="56" font-size="12" fill="#a1a1aa">Signature + baseline</text>
+      <text x="20" y="74" font-size="11" fill="#71717a" font-family="JetBrains Mono, monospace">Incident</text>
+    </g>
+
+    <!-- Commander -->
+    <g transform="translate(480, 60)">
+      <rect width="200" height="100" rx="14" fill="url(#nodeBg)" stroke="#fb923c" stroke-opacity="0.5"/>
+      <text x="20" y="34" font-size="16" font-weight="600" fill="#fafafa">IncidentCommander</text>
+      <text x="20" y="56" font-size="12" fill="#a1a1aa">BaseAgent + agent_loop</text>
+      <text x="20" y="74" font-size="11" fill="#71717a" font-family="JetBrains Mono, monospace">LLM calls</text>
+      <!-- Pulse dot -->
+      <circle cx="182" cy="18" r="4" fill="#fb923c"/>
+    </g>
+
+    <!-- Sandbox -->
+    <g transform="translate(720, 60)">
+      <rect width="180" height="100" rx="14" fill="url(#nodeBg)" stroke="#27272a"/>
+      <text x="20" y="34" font-size="16" font-weight="600" fill="#fafafa">Sandbox</text>
+      <text x="20" y="56" font-size="12" fill="#a1a1aa">Docker + FastAPI</text>
+      <text x="20" y="74" font-size="11" fill="#71717a" font-family="JetBrains Mono, monospace">ToolResult</text>
+    </g>
+
+    <!-- Report -->
+    <g transform="translate(940, 60)">
+      <rect width="120" height="100" rx="14" fill="url(#nodeBg)" stroke="#a78bfa" stroke-opacity="0.5"/>
+      <text x="20" y="34" font-size="16" font-weight="600" fill="#fafafa">Report</text>
+      <text x="20" y="56" font-size="12" fill="#a1a1aa">Draft PR</text>
+      <text x="20" y="74" font-size="11" fill="#71717a" font-family="JetBrains Mono, monospace">never auto</text>
+    </g>
+  </g>
+
+  <!-- Flow line -->
+  <line x1="220" y1="110" x2="260" y2="110" stroke="url(#flow)" stroke-width="2" stroke-dasharray="3 4"/>
+  <line x1="440" y1="110" x2="480" y2="110" stroke="url(#flow)" stroke-width="2" stroke-dasharray="3 4"/>
+  <line x1="680" y1="110" x2="720" y2="110" stroke="url(#flow)" stroke-width="2" stroke-dasharray="3 4"/>
+  <line x1="900" y1="110" x2="940" y2="110" stroke="url(#flow)" stroke-width="2" stroke-dasharray="3 4"/>
+
+  <!-- Arrow heads -->
+  <g fill="url(#flow)">
+    <polygon points="258,110 250,106 250,114"/>
+    <polygon points="478,110 470,106 470,114"/>
+    <polygon points="718,110 710,106 710,114"/>
+    <polygon points="938,110 930,106 930,114"/>
+  </g>
+</svg>

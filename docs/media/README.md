@@ -1,43 +1,63 @@
 # Media directory
 
-This directory holds the demo GIFs, screenshots, and architecture
-diagrams referenced from the top-level README and the landing page.
-Files are committed as-is (no Git LFS).  Keep them small — prefer
-animated PNG or WebP over MP4 where possible, and cap any recording at
-~3 MB.
+Every image, GIF, video, and SVG referenced from the top-level README
+and the landing page lives here.  Files are committed as-is (no Git
+LFS) — keep them small.
 
-## Expected files
+## File inventory
+
+### Already committed (no capture needed)
+
+| File | Used by | Shape |
+|------|---------|-------|
+| `banner.svg` | README hero | 1280×400 header banner with logo + tagline |
+| `flow-diagram.svg` | README "How it works" | 1100×220 four-node pipeline |
+
+### To capture (placeholders in the README are image/video tags)
 
 | File | Used by | How to capture |
 |------|---------|----------------|
-| `hero-demo.gif` | [`README.md`](../../README.md) hero section | `quell watch` running against `fixtures/sample_logs/app_error.log`; record the first ~15s with an incident firing |
-| `quell-init.gif` | README "Getting started" section | `quell init` interactive wizard — full flow, ~25s |
-| `quell-doctor.png` | README "Getting started" | Terminal screenshot of a successful `quell doctor` run |
-| `quell-history.png` | README "Inspect" section | `quell history` output after a couple of incidents |
-| `architecture.svg` | README "Architecture" section | Export the animated SVG from the landing page or hand-draw one |
-| `og-banner.png` | OpenGraph / Twitter card (1200×630) | Landing hero screenshot with the logo overlaid |
+| `hero-demo.gif` | README hero (under the banner) | `quell watch` reacting to `fixtures/sample_logs/app_error.log`.  ~15s, ≤1.5 MB. |
+| `hero-demo.mp4` | Same slot (served via HTML5 `<video>` when GitHub supports it) | Same content, encoded as H.264 + AAC MP4.  ≤3 MB. |
+| `quell-init.gif` | "Quick start" section | Full `quell init` wizard flow.  ~25s, ≤2 MB. |
+| `quell-doctor.png` | "Quick start" | Static screenshot — every row green. ≤200 KB. |
+| `quell-history.png` | "Quick start" | `quell history` table after a few incidents. ≤200 KB. |
+| `quell-show.png` | "Quick start" | `quell show <id>` detailed view. ≤200 KB. |
+| `feature-sandboxed.png` | Features grid | Screenshot of a tool running inside the Docker sandbox (terminal w/ bearer token). ≤250 KB. |
+| `feature-subagents.png` | Features grid | `view_graph` tool output with parent + 2 children. ≤200 KB. |
+| `feature-skills.png` | Features grid | Render of `quell/skills/incidents/stripe-webhook-timeout.md`. ≤200 KB. |
+| `arch-detailed.svg` | "Architecture" deep-dive | Optional hand-drawn architecture diagram. |
+| `og-banner.png` | OpenGraph / Twitter card | 1200×630, lands in Twitter/Slack/LinkedIn unfurls. |
 
 ## Recording tips
 
-- macOS: [Kap](https://getkap.co/) for animated recordings, `Cmd-Shift-5`
-  for static screenshots.  Record at 2x the final size, then downscale
-  with [gifski](https://gif.ski/) or `ffmpeg -vf scale=720:-1`.
-- Use a dark terminal theme (matches the landing's aesthetic).  The
-  system default on macOS 14+ is fine; or use iTerm2 with a subtle
-  dark theme and ~20pt JetBrains Mono.
-- Cap recordings at 15 fps — the eye doesn't need more and it
-  halves file size.
-- After `gifski`, run through [ImageOptim](https://imageoptim.com/) or
-  `gifsicle -O3`.
+- **macOS** — [Kap](https://getkap.co/) for GIFs, `Cmd-Shift-5` for PNGs.
+- **Cross-platform** — OBS Studio → ffmpeg pipeline.
+- Record at **2× target size**, then downscale with
+  [gifski](https://gif.ski/) or `ffmpeg -vf scale=720:-1`.
+- Cap GIFs at **15 fps** — the eye doesn't need more.
+- Pipe through [ImageOptim](https://imageoptim.com/) or `gifsicle -O3`
+  after export.
+- Use a **dark terminal theme** (matches the README + landing).
+  iTerm2 or macOS Terminal.app default.  ~20pt JetBrains Mono.
+- Set the window to **exactly 720px wide** — the README renders at
+  that size, so don't waste pixels.
 
-## Size targets
+## Size budget
 
-- `hero-demo.gif`: ≤ 3 MB (aim for 1.5 MB).
-- Static screenshots: ≤ 400 KB each.
-- `og-banner.png`: ≤ 800 KB; 1200×630 exactly.
+| Asset type | Target | Hard cap |
+|------------|--------|----------|
+| Hero GIF | 1.5 MB | 3 MB |
+| MP4 alt | 2.5 MB | 4 MB |
+| Feature GIFs | 800 KB | 2 MB |
+| PNG screenshots | 150 KB | 400 KB |
+| OG banner | 500 KB | 800 KB |
 
-## Placeholder fallback
+## If a file isn't committed yet
 
-Until the real media lands, the top-level README renders a code-block
-"storyboard" for each placeholder path.  That means the README is
-readable on GitHub *today* even with no binaries committed.
+The top-level README uses `<img>` / `<video>` tags that silently fail
+when the file is missing — GitHub will render the alt text and the
+surrounding prose stays readable.  Every visual block is followed by
+a `<details>` storyboard that shows the equivalent terminal output in
+a code block, so the README is fully useful on day one even with zero
+media committed.

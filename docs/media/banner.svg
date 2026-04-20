@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" role="img" aria-label="Quell — your production's autonomous on-call">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="100%" stop-color="#14141f"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fcd34d"/>
+      <stop offset="55%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="15%" cy="30%" r="45%">
+      <stop offset="0%" stop-color="#fb923c" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="85%" cy="75%" r="45%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0 L0 0 L0 36" fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Backdrop -->
+  <rect width="1280" height="400" fill="url(#bg)"/>
+  <rect width="1280" height="400" fill="url(#grid)"/>
+  <rect width="1280" height="400" fill="url(#glow1)"/>
+  <rect width="1280" height="400" fill="url(#glow2)"/>
+
+  <!-- Ember accent dots -->
+  <circle cx="72"  cy="84"  r="2" fill="#fb923c" opacity="0.75"/>
+  <circle cx="1180" cy="320" r="2" fill="#a78bfa" opacity="0.7"/>
+  <circle cx="240" cy="340" r="1.5" fill="#fcd34d" opacity="0.5"/>
+
+  <!-- Shield mark (compact logo on the left) -->
+  <g transform="translate(120, 120)">
+    <circle cx="80" cy="80" r="74" fill="none" stroke="url(#title)" stroke-width="1.5" opacity="0.4"/>
+    <path d="M80 20 L138 46 V80 C138 117 114 140 80 152 C46 140 22 117 22 80 V46 Z"
+          stroke="url(#title)" stroke-width="2.5" fill="rgba(251,146,60,0.05)"/>
+    <circle cx="110" cy="110" r="10" fill="url(#title)"/>
+    <circle cx="110" cy="110" r="18" fill="none" stroke="url(#title)" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- Text block -->
+  <g transform="translate(340, 140)" font-family="Inter, system-ui, sans-serif">
+    <text x="0" y="0" font-size="84" font-weight="700" fill="url(#title)" letter-spacing="-2">Quell</text>
+    <text x="0" y="64" font-size="26" font-weight="500" fill="#fafafa" letter-spacing="-0.4">
+      Your production&apos;s autonomous on-call.
+    </text>
+    <text x="0" y="110" font-size="16" font-weight="400" fill="#a1a1aa">
+      Open-source multi-agent incident response. Draft the fix while you sleep.
+    </text>
+    <!-- Stat row -->
+    <g transform="translate(0, 144)" font-size="13" fill="#71717a">
+      <g>
+        <circle cx="4" cy="-4" r="3" fill="#22c55e"/>
+        <text x="16" y="0">242 tests passing</text>
+      </g>
+      <g transform="translate(180, 0)">
+        <circle cx="4" cy="-4" r="3" fill="#fb923c"/>
+        <text x="16" y="0">5 install channels</text>
+      </g>
+      <g transform="translate(370, 0)">
+        <circle cx="4" cy="-4" r="3" fill="#a78bfa"/>
+        <text x="16" y="0">LiteLLM — any model</text>
+      </g>
+      <g transform="translate(580, 0)">
+        <circle cx="4" cy="-4" r="3" fill="#fcd34d"/>
+        <text x="16" y="0">Apache 2.0</text>
+      </g>
+    </g>
+  </g>
+</svg>
