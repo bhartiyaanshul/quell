@@ -20,6 +20,15 @@ classifiers = [
     "Topic :: System :: Systems Administration",
 ]
 packages = [{include = "quell"}]
+include = [
+    # Dashboard static export — populated by release.yml before the
+    # wheel build.  Gitignored so local dev checkouts stay clean.
+    {path = "quell/dashboard/static/**/*", format = ["sdist", "wheel"]},
+    # Agent Jinja2 templates.
+    {path = "quell/agents/**/*.jinja", format = ["sdist", "wheel"]},
+    # Skill markdown runbooks.
+    {path = "quell/skills/**/*.md", format = ["sdist", "wheel"]},
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"

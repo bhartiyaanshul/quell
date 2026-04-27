@@ -115,6 +115,42 @@ def stats() -> None:
     asyncio.run(print_stats())
 
 
+@app.command()
+def replay(incident_id: str) -> None:
+    """Print the full event timeline for a past incident investigation."""
+    import asyncio
+
+    from quell.interface.replay import run_replay
+
+    ok = asyncio.run(run_replay(incident_id))
+    if not ok:
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def dashboard(
+    port: Annotated[
+        int,
+        typer.Option("--port", "-p", help="Port to bind the dashboard on."),
+    ] = 7777,
+    host: Annotated[
+        str,
+        typer.Option("--host", help="Interface to bind to (default localhost)."),
+    ] = "127.0.0.1",
+    no_open: Annotated[
+        bool,
+        typer.Option("--no-open", help="Do not auto-open the browser."),
+    ] = False,
+) -> None:
+    """Launch the read-only web dashboard on the local machine."""
+    from quell.dashboard.launcher import run_dashboard_sync
+
+    try:
+        run_dashboard_sync(host=host, port=port, open_browser=not no_open)
+    except KeyboardInterrupt:
+        typer.echo("\n(quell dashboard: interrupted)")
+
+
 @app.command(name="test-notifier")
 def test_notifier(
     channel: Annotated[
@@ -151,4 +187,6 @@ __all__ = [
     "show",
     "stats",
     "test_notifier",
+    "dashboard",
+    "replay",
 ]

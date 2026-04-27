@@ -63,6 +63,10 @@ packaging/npm/*.tgz
 quell-*.tar.gz
 quell-*.zip
 
+# Bundled dashboard static export — populated at release time by CI,
+# never committed by hand.
+quell/dashboard/static/
+
 # Secrets — never commit these
 .env
 .env.*

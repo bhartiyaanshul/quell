@@ -19,6 +19,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -40,6 +44,19 @@ jobs:
 
       - name: Run test suite before publishing
         run: poetry run pytest tests/unit -q
+
+      # Build the Next.js dashboard so its ``out/`` directory can be
+      # copied into ``quell/dashboard/static/`` and bundled in the wheel.
+      - name: Build dashboard frontend
+        working-directory: dashboard
+        run: |
+          npm ci
+          npm run build
+
+      - name: Bundle dashboard static into package
+        run: |
+          rm -rf quell/dashboard/static
+          cp -r dashboard/out quell/dashboard/static
 
       - name: Build distribution artifacts
         run: poetry build
