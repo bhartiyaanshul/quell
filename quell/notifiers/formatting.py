@@ -57,7 +57,7 @@ def build_summary(incident: Incident) -> IncidentSummary:
 
     severity = (incident.severity or "info").lower()
     return IncidentSummary(
-        title=f"\U0001f6a8 Incident detected \u2014 root cause: {headline}",
+        title=f"Incident {incident.id} \u2014 {headline}",
         severity_label=severity.capitalize(),
         severity_color=_SEVERITY_COLORS.get(severity, _SEVERITY_COLORS["info"]),
         root_cause=root,
