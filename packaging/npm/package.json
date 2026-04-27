@@ -1,6 +1,6 @@
 {
   "name": "quell-agent",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Your production's autonomous on-call — open-source multi-agent incident response.",
   "keywords": [
     "incident-response",

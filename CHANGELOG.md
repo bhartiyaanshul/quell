@@ -8,6 +8,80 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing yet.
 
+## [0.2.0] — 2026-04-23
+
+Theme: **observability + integration**.  You can now *see* what Quell
+did (dashboard + replay), *tell your team* (notifiers), *know what it
+cost* (cost tracking + budgets), and *match more incident types*
+(expanded skill library).
+
+No breaking changes to `BaseAgent` / `AgentState` / `QuellConfig` /
+the sandbox protocol.  v0.1.x configs keep working untouched.
+
+### Added
+
+- **Phase 17 — Notifiers.** `quell/notifiers/` with a `Notifier`
+  ABC and three concrete implementations: Slack (rich blocks via
+  incoming webhook), Discord (coloured embed via incoming webhook),
+  Telegram (Bot API `sendMessage` with MarkdownV2).  `quell
+  test-notifier <channel>` fires a synthetic incident end-to-end.
+  The `quell watch` loop fans out to every configured notifier in
+  parallel once an investigation completes; any transient network
+  failure on one channel no longer blocks the others.
+- **Phase 18 — 12 new skill runbooks.** Five new incident skills
+  (`dns-resolution-failure`, `ssl-certificate-expired`,
+  `memory-leak`, `disk-full`, `database-deadlock`), five new
+  framework skills (`django`, `flask`, `spring-boot`, `rails`,
+  `express`), and two new technology skills (`kubernetes`,
+  `docker`).  Bundled library is now **19 skills**.
+- **Phase 19 — Event persistence.** New `quell.memory.agent_runs`,
+  `quell.memory.events`, and `quell.memory.findings` CRUD modules.
+  The agent loop now writes one `AgentRun` row per investigation
+  plus `Event` rows for every LLM call, tool call, and error, and
+  `Finding` rows for structured evidence — all behind an optional
+  `session_factory` constructor argument so tests without
+  persistence still work.
+- **Phase 20 — Cost tracking + budget enforcement.** New
+  `quell.llm.cost` module with a per-model rate card (Anthropic,
+  OpenAI, Google, Ollama).  `AgentState` tracks running token +
+  cost totals; the return dict now includes `input_tokens`,
+  `output_tokens`, and `cost_usd`.  New `AgentConfig.max_cost_usd`
+  halts investigations when they exceed the budget.
+  `Incident.cost_usd` accumulates across every run for the incident.
+- **Phase 21 — Web dashboard.** A read-only local dashboard
+  launched with `quell dashboard`.  Next.js 14 SPA (static-exported,
+  bundled in the wheel) served by a small FastAPI backend with
+  four routers:
+  - `GET /api/incidents` / `/api/incidents/{id}`
+  - `GET /api/runs/{run_id}/events`
+  - `GET /api/stats`
+  - `GET /api/incidents/{id}/replay`
+
+  Pages: incident list with filters, incident detail with run
+  metrics and findings, replay timeline, aggregate stats.  Design
+  system matches the landing site (ember + violet on deep indigo).
+- **Phase 22 — Investigation replay.** `quell replay <incident_id>`
+  renders the full event stream for every agent run as a terminal
+  timeline — costs, latencies, tool calls, errors.  The dashboard
+  shows the same data interactively.
+
+### Changed
+
+- `release.yml` now builds the Next.js dashboard and copies
+  `dashboard/out/` into `quell/dashboard/static/` before `poetry
+  build` so the compiled SPA ships inside the wheel.
+- `pyproject.toml` `tool.poetry.include` explicitly packages the
+  dashboard static dir, Jinja2 templates, and skill markdown.
+- `tests/unit/test_agent_loop.py` uses `AgentConfig(max_iterations=3)`
+  instead of the deprecated `_build_initial_state` override.
+
+### Stop-gate
+
+- `ruff check`, `ruff format --check`, and `mypy --strict` all clean
+  across 111 source files.
+- **302 tests** passing (was 242 in v0.1.0 / v0.1.1 — +60 new: 20
+  notifier, 10 persistence, 14 cost, 10 dashboard, 6 replay).
+
 ## [0.1.1] — 2026-04-21
 
 Patch release covering CI + packaging + documentation fixes that

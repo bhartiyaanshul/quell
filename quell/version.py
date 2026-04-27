@@ -1,3 +1,3 @@
 """Quell version string — single source of truth."""
 
-__version__: str = "0.1.1"
+__version__: str = "0.2.0"
