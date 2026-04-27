@@ -2,12 +2,15 @@
 
 import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 import {
+  Bell,
   BookOpen,
   Brain,
   GitPullRequest,
+  LayoutDashboard,
   Lock,
   Network,
   ShieldCheck,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -21,6 +24,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   network: Network,
   "book-open": BookOpen,
   lock: Lock,
+  bell: Bell,
+  "layout-dashboard": LayoutDashboard,
+  wallet: Wallet,
 };
 
 export function Features() {

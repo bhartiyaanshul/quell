@@ -6,7 +6,7 @@
 <p align="center">
   <a href="https://github.com/bhartiyaanshul/quell/releases/latest"><img src="https://img.shields.io/github/v/release/bhartiyaanshul/quell?color=fb923c&label=release&labelColor=0a0a0f&style=flat-square" alt="Latest release"/></a>
   <a href="https://github.com/bhartiyaanshul/quell/actions"><img src="https://img.shields.io/github/actions/workflow/status/bhartiyaanshul/quell/ci.yml?branch=main&label=CI&labelColor=0a0a0f&color=22c55e&style=flat-square" alt="CI status"/></a>
-  <img src="https://img.shields.io/badge/tests-242_passing-22c55e?labelColor=0a0a0f&style=flat-square" alt="242 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-302_passing-22c55e?labelColor=0a0a0f&style=flat-square" alt="302 tests passing"/>
   <img src="https://img.shields.io/badge/mypy-strict-a78bfa?labelColor=0a0a0f&style=flat-square" alt="mypy strict"/>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-a78bfa?labelColor=0a0a0f&style=flat-square" alt="Apache 2.0"/></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.12+-a78bfa?labelColor=0a0a0f&style=flat-square" alt="Python 3.12+"/></a>
@@ -141,7 +141,7 @@ curl -sSL https://github.com/bhartiyaanshul/quell/releases/latest/download/quell
 No runtime at all. The archive bundles CPython and every dependency. Available for macOS arm64, Linux x86_64, and Windows x86_64.
 
 > [!TIP]
-> Today only the curl installer runs out of the box. The other four channels activate the moment the first `v0.1.0` tag ships. Full cascade in [`packaging/README.md`](packaging/README.md).
+> All five install paths are wired through the release pipeline; the `curl` one-liner is the most universally exercised. Full cascade in [`packaging/README.md`](packaging/README.md).
 
 ---
 
@@ -201,6 +201,42 @@ seen timestamps, linked PR URL.
 
 </td>
 </tr>
+<tr>
+<td width="50%" valign="top">
+
+**`quell dashboard`** — local web UI <sup>v0.2</sup>
+
+Boots a Next.js + FastAPI dashboard at `http://127.0.0.1:7777` with
+incident list, run timelines, findings, and aggregate stats. Auto-opens
+your browser; pass `--no-open` for CI.
+
+</td>
+<td width="50%" valign="top">
+
+**`quell replay <id>`** — terminal timeline <sup>v0.2</sup>
+
+Prints the full event stream for a past investigation — every LLM
+call, tool call, latency, cost, and error — as a chronological
+timeline. Same data the dashboard renders interactively.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**`quell test-notifier <channel>`** — verify webhooks <sup>v0.2</sup>
+
+Fires a synthetic incident through Slack / Discord / Telegram so you
+can confirm webhook URLs and bot tokens are wired up before real
+traffic hits.
+
+</td>
+<td width="50%" valign="top">
+
+&nbsp;
+
+</td>
+</tr>
 </table>
 
 Full walkthrough in [**docs/getting-started.md**](docs/getting-started.md).
@@ -246,6 +282,8 @@ flowchart LR
 | 3. Commander | Root `IncidentCommander` reads logs, greps code, reasons, optionally spawns specialist subagents | [`quell/agents/`](quell/agents/) |
 | 4. Sandbox | Every code-touching tool runs inside a Docker container with your workspace mounted **read-only** | [`quell/runtime/`](quell/runtime/) · [`quell/tool_server/`](quell/tool_server/) |
 | 5. Report | Structured `{root_cause, evidence, proposed_fix, status}`, wraps a draft PR for human review | [`quell/tools/reporting/`](quell/tools/reporting/) |
+| 6. Persist | One `AgentRun` row per investigation plus per-iteration `Event` and structured `Finding` rows for the dashboard + replay | [`quell/memory/`](quell/memory/) |
+| 7. Notify | Fans the result out to Slack / Discord / Telegram in parallel | [`quell/notifiers/`](quell/notifiers/) |
 
 ---
 
@@ -292,8 +330,9 @@ any custom endpoint. One line of TOML to switch. No lock-in.
 ### Skill runbooks
 
 Markdown + YAML frontmatter runbooks get auto-injected into the agent's
-system prompt when their triggers match an incident. Seven come bundled
-(Stripe, Next.js, FastAPI, Postgres, Redis, OpenAI, null-deref).
+system prompt when their triggers match an incident. **Nineteen** come
+bundled — Stripe, OpenAI, null-deref, DNS, SSL, memory, disk, deadlock,
+Django/Flask/Rails/Spring/Express, Postgres, Redis, Docker, Kubernetes.
 
 [docs/extending.md](docs/extending.md#writing-a-skill)
 
@@ -317,6 +356,44 @@ machine unless you explicitly configure a remote monitor or LLM
 endpoint. Telemetry is opt-in only.
 
 [docs/configuration.md](docs/configuration.md)
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+### Notify your team
+
+Slack, Discord, and Telegram channels fan out in parallel once an
+investigation completes. Configure once in TOML, verify with
+`quell test-notifier <channel>`, never mix transient errors across
+channels.
+
+[docs/configuration.md](docs/configuration.md#notifiers)
+
+</td>
+<td width="33%" valign="top">
+
+### Web dashboard + replay
+
+`quell dashboard` boots a local Next.js + FastAPI UI for incidents,
+runs, findings, and aggregate stats. `quell replay <id>` prints the
+same event stream as a terminal timeline. Read-only, no Cloud
+required.
+
+[docs/commands.md](docs/commands.md#dashboard)
+
+</td>
+<td width="33%" valign="top">
+
+### Cost tracking + budgets
+
+Per-model rate card across Anthropic / OpenAI / Google / Ollama. Every
+run records input + output tokens and a USD estimate; `max_cost_usd`
+in `.quell/config.toml` halts a runaway investigation before it
+lights money on fire.
+
+[docs/configuration.md](docs/configuration.md#agent)
 
 </td>
 </tr>
@@ -345,17 +422,22 @@ endpoint. Telemetry is opt-in only.
 Plus four inter-agent tools (`create_agent`, `send_message`,
 `wait_for_message`, `view_graph`) added in Phase 13.
 
-### 7 bundled skill runbooks
+### 19 bundled skill runbooks
 
 | Slug | Category | Severity | Triggers when |
 |------|----------|----------|---------------|
 | `stripe-webhook-timeout` | incidents | high | error mentions `stripe-signature` or `webhook timeout` |
 | `unhandled-null` | incidents | medium | error mentions `NoneType`, `null is not an object`, `Cannot read propert` |
 | `openai-rate-limit` | incidents | high | error mentions `rate_limit_exceeded`, `429`, `tokens per minute` |
-| `fastapi` | frameworks | medium | framework is `fastapi` or error mentions `starlette`, `uvicorn` |
-| `nextjs-app-router` | frameworks | medium | framework is `nextjs` or error mentions `server component`, `RSC` |
-| `postgres` | technologies | high | tech stack includes `postgres`, error mentions `psycopg`, `deadlock detected` |
-| `redis` | technologies | medium | tech stack includes `redis`, error mentions `OOM command not allowed` |
+| `dns-resolution-failure` | incidents | high | error mentions `EAI_AGAIN`, `getaddrinfo`, `unknown host` |
+| `ssl-certificate-expired` | incidents | high | error mentions `certificate expired`, `CERT_HAS_EXPIRED` |
+| `memory-leak` | incidents | high | RSS climbs without GC drop, OOMKilled, heap snapshots diverge |
+| `disk-full` | incidents | critical | error mentions `ENOSPC`, `no space left on device`, write failures |
+| `database-deadlock` | incidents | high | error mentions `deadlock detected`, `lock wait timeout` |
+| `fastapi` / `nextjs-app-router` | frameworks | medium | framework matches or stack trace fingerprints |
+| `django` / `flask` / `rails` / `spring-boot` / `express` | frameworks | medium | framework matches or stack trace fingerprints |
+| `postgres` / `redis` | technologies | high | tech stack matches, error mentions known signals |
+| `docker` / `kubernetes` | technologies | high | container/pod-level failures, OOM, CrashLoopBackOff |
 
 Add your own by dropping a `.md` file in [`quell/skills/<category>/`](quell/skills/).
 See [**docs/extending.md**](docs/extending.md#writing-a-skill).
@@ -368,15 +450,17 @@ See [**docs/extending.md**](docs/extending.md#writing-a-skill).
 graph TB
   subgraph host["Host (your dev machine or on-call server)"]
     CFG[("Config<br/>TOML + Pydantic")]
-    MEM[("Memory<br/>SQLAlchemy async")]
+    MEM[("Memory<br/>AgentRun · Event · Finding")]
     MON[Monitors] --> DET[Detector]
     DET --> CMD[IncidentCommander]
-    CMD <--> LLM[LiteLLM]
-    CMD <--> SKL[(Skills)]
+    CMD <--> LLM[LiteLLM<br/>cost + budgets]
+    CMD <--> SKL[(19 Skills)]
     CMD -->|spawn| SUB[Subagents]
     SUB --> CMD
+    CMD -->|fan-out| NOT[Slack · Discord · Telegram]
     CFG -.-> CMD
     CMD -.-> MEM
+    MEM -.-> DASH[Dashboard + replay]
   end
 
   subgraph sandbox["Docker sandbox (per-agent)"]
@@ -391,23 +475,27 @@ graph TB
 
   style CMD fill:#fb923c20,stroke:#fb923c,color:#fafafa
   style SUB fill:#fb923c15,stroke:#fb923c80,color:#fafafa
+  style NOT fill:#a78bfa15,stroke:#a78bfa80,color:#fafafa
+  style DASH fill:#a78bfa15,stroke:#a78bfa80,color:#fafafa
   style sandbox fill:#12121a,stroke:#a78bfa,color:#fafafa
   style host fill:#0a0a0f,stroke:#27272a,color:#fafafa
 ```
 
-Eight subsystems, every boundary typed.
+Eleven subsystems, every boundary typed.
 
 | Subsystem | Lines of Python | Test coverage |
 |-----------|-----------------|---------------|
 | `quell/config/` | ~400 | 24 tests |
-| `quell/memory/` | ~500 | 30 tests |
+| `quell/memory/` | ~770 | 40 tests |
 | `quell/monitors/` | ~600 | 24 tests |
-| `quell/llm/` | ~450 | 27 tests |
-| `quell/tools/` | ~700 | 40+ tests |
-| `quell/agents/` | ~900 | 33 tests |
+| `quell/llm/` | ~530 | 41 tests |
+| `quell/tools/` | ~700 | 42 tests |
+| `quell/agents/` | ~1 100 | 33 tests |
 | `quell/skills/` | ~360 | 30 tests |
-| `quell/runtime/` + `quell/tool_server/` | ~400 | 15 tests |
-| **Total** | **~4 300 LoC** | **242 tests** |
+| `quell/runtime/` + `quell/tool_server/` | ~400 | 16 tests |
+| `quell/notifiers/` | ~410 | 20 tests |
+| `quell/dashboard/` + `quell/replay/` | ~570 | 16 tests |
+| **Total** | **~5 800 LoC** | **302 tests** |
 
 Deep dive in [**docs/architecture.md**](docs/architecture.md).
 
@@ -485,7 +573,10 @@ OpenAI-compatible endpoint. Swap via one line of TOML.
 
 A typical incident runs 3–7 agent iterations and consumes 15–40k input
 tokens plus 1–3k output tokens. On `claude-haiku-4-5` that is roughly
-$0.01–0.03 per incident. You set the model; you set the budget.
+$0.01–0.03 per incident. As of v0.2, every run records its own token +
+USD cost and a hard `max_cost_usd` cap in `.quell/config.toml` halts a
+runaway investigation before it lights money on fire. `quell stats`
+shows the rolling per-incident total.
 
 </details>
 
@@ -501,19 +592,35 @@ Docker for the read-only workspace and network isolation guarantees.
 <details>
 <summary><b>Is it production-ready?</b></summary>
 
-Quell is **v0.1.0 pre-alpha**. Core flow works end-to-end (242 tests)
-and is API-stable, but expect rough edges around non-English logs,
-long stack traces, and rare LLM failure modes. Run Quell against
-staging first. File issues and we respond fast.
+Quell is **v0.2.0 alpha**. Core flow works end-to-end (302 tests),
+v0.1.x configs are forward-compatible, and the new persistence,
+notifier, and dashboard layers are in active use. Expect rough edges
+around non-English logs, long stack traces, and rare LLM failure
+modes. Run Quell against staging first. File issues and we respond
+fast.
 
 </details>
 
 <details>
 <summary><b>Can I self-host the dashboard?</b></summary>
 
-Today there is no dashboard. Everything is CLI. A minimal web UI is
-on the roadmap but not a v0.1 commitment. The landing page
-(`landing/`) is marketing-only, not a dashboard.
+Yes — `quell dashboard` boots a read-only Next.js + FastAPI UI on
+`http://127.0.0.1:7777` with incident list, run timelines, findings,
+and aggregate stats. The compiled SPA ships inside the Python wheel,
+so no separate Node runtime is needed at install time. Bind it to a
+different host with `--host 0.0.0.0` if you want it on a shared
+on-call box.
+
+</details>
+
+<details>
+<summary><b>Where do alerts go?</b></summary>
+
+`quell.notifiers` ships Slack, Discord, and Telegram channels. Add
+one (or all) under `[[notifiers]]` in `.quell/config.toml`, run
+`quell test-notifier slack` (or `discord`, `telegram`) to verify the
+wiring, then `quell watch` will fan a structured incident summary out
+to every configured channel in parallel as soon as the agent finishes.
 
 </details>
 
@@ -562,12 +669,12 @@ if you are not sure where to start.
 
 ## Roadmap
 
-Quell is built across 16 phases documented in [`BUILD_PLAN.md`](BUILD_PLAN.md).
+Quell is built across 22 phases documented in [`BUILD_PLAN.md`](BUILD_PLAN.md).
 
-- **Phase 1–15 (shipped).** Config, memory, monitors, LLM, tools, agents, skills, detector, Docker runtime, tool server, built-in tools, agent graph, end-to-end integration, polish.
-- **Phase 16 (next).** Public launch. Manual checklist in [`docs/LAUNCH.md`](docs/LAUNCH.md).
-- **v0.2 (planned).** Web dashboard, Slack / Discord notifiers, more skill runbooks, investigation replay.
-- **v1.0 (aspirational).** Production-ready, typed per-model cost budgets, multi-repo coordination.
+- **v0.1 — phases 1–16 (shipped).** Config, memory, monitors, LLM, tools, agents, skills, detector, Docker runtime, tool server, built-in tools, agent graph, end-to-end integration, polish, public launch.
+- **v0.2 — phases 17–22 (shipped).** Slack / Discord / Telegram notifiers, expanded 19-skill library, AgentRun + Event + Finding persistence, per-model cost tracking with `max_cost_usd` budgets, local web dashboard, terminal `quell replay`.
+- **v0.3 (next).** Multi-repo coordination, cross-incident learning, richer dashboard filters.
+- **v1.0 (aspirational).** Production-ready, typed per-incident cost budgets, hosted Cloud option (opt-in only — CLI stays self-hostable forever).
 
 ---
 

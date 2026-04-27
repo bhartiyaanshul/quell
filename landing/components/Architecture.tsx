@@ -25,11 +25,11 @@ export function Architecture() {
         eyebrow="Under the hood"
         title={
           <>
-            Eight subsystems,{" "}
+            Eleven subsystems,{" "}
             <span className="text-gradient-cool">one clean contract.</span>
           </>
         }
-        body="Monitors emit RawEvents. Detector fingerprints. Commander investigates via tools that run inside a Docker sandbox. Every boundary is typed."
+        body="Monitors emit RawEvents. Detector fingerprints. Commander investigates via tools in a Docker sandbox, persists every run, fans the result to Slack / Discord / Telegram, and surfaces it in a local dashboard."
       />
 
       <div ref={ref} className="relative mt-14 overflow-hidden rounded-2xl border border-border bg-bg-raised/40 p-6 backdrop-blur md:p-10">
@@ -101,12 +101,19 @@ export function Architecture() {
           />
         </div>
 
-        {/* Bottom row */}
+        {/* Middle row */}
         <div className="relative mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           <Node title="Tools" subtitle="code/git/monitoring/reporting" />
-          <Node title="Skills" subtitle="markdown runbooks" />
-          <Node title="Memory" subtitle="SQLAlchemy async" />
-          <Node title="CLI" subtitle="init · doctor · watch" />
+          <Node title="Skills" subtitle="19 bundled runbooks" />
+          <Node title="Memory" subtitle="AgentRun · Event · Finding" />
+          <Node title="CLI" subtitle="init · watch · dashboard · replay" />
+        </div>
+
+        {/* Bottom row — v0.2 surfaces */}
+        <div className="relative mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
+          <Node title="Notifiers" subtitle="Slack · Discord · Telegram" />
+          <Node title="Dashboard" subtitle="Next.js + FastAPI" />
+          <Node title="Cost + budgets" subtitle="per-model rate card" />
         </div>
       </div>
     </section>

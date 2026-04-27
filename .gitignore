@@ -13,8 +13,10 @@ var/
 sdist/
 develop-eggs/
 .installed.cfg
-lib/
-lib64/
+# Scope to repo-root only — `landing/lib/` and `dashboard/lib/` are
+# real TypeScript source dirs and must be tracked.
+/lib/
+/lib64/
 MANIFEST
 
 # Virtual environments

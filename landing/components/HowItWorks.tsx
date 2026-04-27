@@ -35,7 +35,7 @@ export function HowItWorks() {
             <span className="text-gradient">Four deliberate stages.</span>
           </>
         }
-        body="From raw log line to draft report is usually under 30 seconds. Quell never auto-merges — a human always reviews the proposed fix."
+        body="From raw log line to draft report — and a Slack / Discord / Telegram ping — is usually under 30 seconds. Quell never auto-merges; a human always reviews the proposed fix."
       />
 
       <div ref={ref} className="relative mt-20">
