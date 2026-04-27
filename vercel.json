@@ -3,5 +3,5 @@
   "installCommand": "cd landing && npm install",
   "buildCommand": "cd landing && npm run build",
   "outputDirectory": "landing/out",
-  "framework": "nextjs"
+  "framework": null
 }
