@@ -37,6 +37,10 @@ class Incident(Base):
     postmortem: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     agent_graph_id: Mapped[str | None] = mapped_column(sa.String, nullable=True)
 
+    # v0.2 — running LLM cost across every investigation run for this
+    # incident.  Summed when each ``agent_loop`` finishes.
+    cost_usd: Mapped[float] = mapped_column(sa.Float, default=0.0, nullable=False)
+
     agent_runs: Mapped[list[AgentRun]] = relationship(
         "AgentRun", back_populates="incident", cascade="all, delete-orphan"
     )

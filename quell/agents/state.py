@@ -70,6 +70,12 @@ class AgentState(BaseModel):
     sandbox_url: str | None = None
     sandbox_token: str | None = None
     final_result: dict[str, object] | None = None
+
+    # v0.2 — rolling token + cost totals updated by the agent loop.
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    estimated_cost_usd: float = 0.0
+
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)
 
@@ -80,6 +86,10 @@ class AgentState(BaseModel):
         leave ``updated_at`` stale.
         """
         self.updated_at = _now()
+
+    def cost_so_far(self) -> float:
+        """Convenience alias for :attr:`estimated_cost_usd`."""
+        return self.estimated_cost_usd
 
 
 __all__ = ["AgentState"]

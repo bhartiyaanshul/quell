@@ -137,6 +137,22 @@ class SandboxConfig(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class AgentConfig(BaseModel):
+    """Runtime limits for every agent_loop invocation.
+
+    These apply uniformly to the root :class:`~quell.agents.IncidentCommander`
+    and any subagents it spawns (Phase 13).
+    """
+
+    max_iterations: int = 50
+    """Hard stop on the number of tool-executing turns per agent."""
+
+    max_cost_usd: float | None = None
+    """Optional per-investigation budget in USD.  When the running cost
+    estimate exceeds this value the loop transitions to ``FAILED`` with
+    a ``"budget exceeded"`` error.  ``None`` disables the cap."""
+
+
 class QuellConfig(BaseModel):
     """Root configuration object, loaded from .quell/config.toml."""
 
@@ -144,6 +160,7 @@ class QuellConfig(BaseModel):
     monitors: list[MonitorConfig] = Field(default_factory=list)
     notifiers: list[NotifierConfig] = Field(default_factory=list)
     llm: LLMConfig = Field(default_factory=LLMConfig)
+    agent: AgentConfig = Field(default_factory=AgentConfig)
     sandbox: SandboxConfig = Field(default_factory=SandboxConfig)
 
 
@@ -159,6 +176,7 @@ __all__ = [
     "SlackNotifierConfig",
     "TelegramNotifierConfig",
     "LLMConfig",
+    "AgentConfig",
     "SandboxConfig",
     "ResourceLimitsConfig",
 ]

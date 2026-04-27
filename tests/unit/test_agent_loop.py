@@ -125,22 +125,16 @@ async def test_agent_loop_hits_max_iterations() -> None:
     async def noop() -> ToolResult:
         return ToolResult.success("noop", "ok")
 
-    # An infinite-ish stream of non-finish tool calls.
-    config = QuellConfig()
+    # An infinite-ish stream of non-finish tool calls, capped via the
+    # AgentConfig knob added in Phase 20.
+    from quell.config.schema import AgentConfig
+
+    config = QuellConfig(agent=AgentConfig(max_iterations=3))
     llm = LLM(config.llm)
     llm.generate = AsyncMock(  # type: ignore[method-assign]
         return_value=_resp("<function=noop></function>")
     )
     agent = _StubAgent(config, llm=llm)
-    agent_state_builder = agent._build_initial_state
-
-    # Override the builder to cap iterations tightly for fast tests.
-    def _tight_state(task: str):  # type: ignore[no-untyped-def]
-        state = agent_state_builder(task)
-        state.max_iterations = 3
-        return state
-
-    agent._build_initial_state = _tight_state  # type: ignore[method-assign]
 
     out = await agent.agent_loop("spin forever")
     assert out["status"] == "failed"
