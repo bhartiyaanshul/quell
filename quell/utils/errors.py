@@ -40,6 +40,10 @@ class SkillError(QuellError):
     """Skill file parsing or loading error."""
 
 
+class NotifierError(QuellError):
+    """A notifier channel failed to dispatch a message."""
+
+
 __all__ = [
     "QuellError",
     "ConfigError",
@@ -49,4 +53,5 @@ __all__ = [
     "SandboxError",
     "LLMError",
     "SkillError",
+    "NotifierError",
 ]

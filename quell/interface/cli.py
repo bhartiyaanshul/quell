@@ -115,6 +115,33 @@ def stats() -> None:
     asyncio.run(print_stats())
 
 
+@app.command(name="test-notifier")
+def test_notifier(
+    channel: Annotated[
+        str,
+        typer.Argument(
+            help="Notifier type to exercise: 'slack', 'discord', or 'telegram'."
+        ),
+    ],
+    path: Annotated[
+        Path | None,
+        typer.Option(
+            "--path",
+            "-p",
+            help="Project directory whose config to load.",
+        ),
+    ] = None,
+) -> None:
+    """Send a synthetic test incident through a configured notifier."""
+    import asyncio
+
+    from quell.interface.notifier_test import run_test_notifier
+
+    ok = asyncio.run(run_test_notifier(channel=channel, project_dir=path))
+    if not ok:
+        raise typer.Exit(code=1)
+
+
 __all__ = [
     "init",
     "doctor",
@@ -123,4 +150,5 @@ __all__ = [
     "history",
     "show",
     "stats",
+    "test_notifier",
 ]

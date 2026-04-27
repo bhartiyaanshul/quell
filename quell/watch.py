@@ -23,8 +23,10 @@ from quell.config.schema import QuellConfig
 from quell.detector import Detector
 from quell.memory.db import create_tables, get_engine, get_session_factory
 from quell.monitors.base import Monitor, create_monitor
+from quell.notifiers import Notifier, create_notifier
 from quell.skills import list_skills, select_applicable
 from quell.tools.builtins import register_builtin_tools
+from quell.utils.errors import NotifierError
 
 if TYPE_CHECKING:
     from quell.memory.models import Incident
@@ -67,6 +69,7 @@ async def watch(config: QuellConfig) -> None:
 
     monitor: Monitor = create_monitor(config.monitors[0])
     all_skills = list_skills()
+    notifiers = _build_notifiers(config)
     background: set[asyncio.Task[dict[str, object]]] = set()
 
     try:
@@ -77,7 +80,12 @@ async def watch(config: QuellConfig) -> None:
 
             context = _context_from_incident(incident, evidence=event.raw)
             skills = select_applicable(all_skills, context)
-            commander = IncidentCommander(config, loaded_skills=skills)
+            commander = IncidentCommander(
+                config,
+                loaded_skills=skills,
+                session_factory=session_factory,
+                incident_id=incident.id,
+            )
 
             logger.info(
                 "launching investigation for incident {} ({} skills)",
@@ -85,7 +93,7 @@ async def watch(config: QuellConfig) -> None:
                 len(skills),
             )
             task = asyncio.create_task(
-                commander.agent_loop(task=incident_prompt(incident))
+                _investigate_and_notify(commander, incident, notifiers)
             )
             background.add(task)
             task.add_done_callback(background.discard)
@@ -94,6 +102,42 @@ async def watch(config: QuellConfig) -> None:
         for task in list(background):
             task.cancel()
         await engine.dispose()
+
+
+def _build_notifiers(config: QuellConfig) -> list[Notifier]:
+    """Instantiate every notifier declared in *config*.
+
+    Configuration errors (missing webhook URL etc.) are logged and the
+    offending notifier is skipped so the watch loop still starts with
+    the channels that are correctly set up.
+    """
+    built: list[Notifier] = []
+    for cfg in config.notifiers:
+        try:
+            built.append(create_notifier(cfg))
+        except NotifierError as exc:
+            logger.warning("notifier {!r} disabled: {}", cfg.type, exc)
+    return built
+
+
+async def _investigate_and_notify(
+    commander: IncidentCommander,
+    incident: Incident,
+    notifiers: list[Notifier],
+) -> dict[str, object]:
+    """Run the commander, then fan the result out to every notifier."""
+    result = await commander.agent_loop(task=incident_prompt(incident))
+
+    if not notifiers:
+        return result
+
+    # Fire notifications in parallel; each notifier handles its own
+    # transient errors so we do not cancel the others.
+    await asyncio.gather(
+        *(n.notify(incident) for n in notifiers),
+        return_exceptions=True,
+    )
+    return result
 
 
 __all__ = ["watch", "incident_prompt"]
