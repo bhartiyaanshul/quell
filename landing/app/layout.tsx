@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { ExtensionErrorFilter } from "@/components/ExtensionErrorFilter";
 import "./globals.css";
@@ -80,6 +81,7 @@ export default function RootLayout({
       <body className="bg-bg-base font-sans text-fg antialiased selection:bg-accent/30">
         <ExtensionErrorFilter />
         {children}
+        <Analytics />
       </body>
     </html>
   );
