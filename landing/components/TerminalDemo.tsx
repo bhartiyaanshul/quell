@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { TERMINAL_LINES } from "@/lib/constants";
 
@@ -12,17 +12,37 @@ import { TERMINAL_LINES } from "@/lib/constants";
  * appear one-by-one with a 750 ms stagger.  The whole sequence loops
  * with a pause at the end so the terminal feels like a persistent
  * process, not a one-shot animation.
+ *
+ * The animation pauses when the demo is offscreen so it doesn't burn
+ * timers further down the page.
  */
 export function TerminalDemo() {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const [typedCmd, setTypedCmd] = useState("");
   const [visibleLines, setVisibleLines] = useState(1);
   const [cycle, setCycle] = useState(0);
+  const [active, setActive] = useState(false);
 
   const FIRST = TERMINAL_LINES[0];
   const TOTAL = TERMINAL_LINES.length;
 
+  // Pause the loop while offscreen.
+  useEffect(() => {
+    const node = wrapRef.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) setActive(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, []);
+
   // Type the first command char-by-char.
   useEffect(() => {
+    if (!active) return;
     setTypedCmd("");
     setVisibleLines(1);
     let i = 0;
@@ -35,10 +55,11 @@ export function TerminalDemo() {
       }
     }, 75);
     return () => clearInterval(id);
-  }, [cycle, FIRST.cmd]);
+  }, [cycle, FIRST.cmd, active]);
 
   // After the command is typed, reveal output lines with a stagger.
   useEffect(() => {
+    if (!active) return;
     if (typedCmd.length < (FIRST.cmd ?? "").length) return;
     if (visibleLines >= TOTAL) {
       // Hold the final state, then loop.
@@ -47,10 +68,11 @@ export function TerminalDemo() {
     }
     const id = setTimeout(() => setVisibleLines((n) => n + 1), 620);
     return () => clearTimeout(id);
-  }, [typedCmd, visibleLines, FIRST.cmd, TOTAL]);
+  }, [typedCmd, visibleLines, FIRST.cmd, TOTAL, active]);
 
   return (
     <motion.div
+      ref={wrapRef}
       initial={{ opacity: 0, y: 30, rotate: -1 }}
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}

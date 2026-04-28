@@ -12,15 +12,14 @@ body {
   color: #fafafa;
 }
 
-/* Smooth scrolling between anchor sections. */
+/* Smooth scrolling between anchor sections.
+   NOTE: `perspective` and `transform-style: preserve-3d` used to live here
+   to prop up the old sticky-hero scroll tilt. They forced *every* descendant
+   into a 3D rendering context, which spiked layer count and tanked scroll
+   performance on every machine that wasn't a workstation. Keep this section
+   simple. */
 html {
   scroll-behavior: smooth;
-  perspective: 1200px;
-  perspective-origin: 50% 50%;
-}
-
-body {
-  transform-style: preserve-3d;
 }
 
 /* Scramble glyphs use tabular numerals so the line doesn't reflow as
@@ -122,4 +121,35 @@ body::-webkit-scrollbar {
 ::selection {
   background: rgba(251, 146, 60, 0.35);
   color: #fff;
+}
+
+/* Hero ember particles — CSS-only drift so the JS thread stays free. */
+@keyframes ember-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.35;
+  }
+  25% {
+    transform: translate3d(8px, -14px, 0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translate3d(-6px, 4px, 0);
+    opacity: 0.45;
+  }
+  75% {
+    transform: translate3d(4px, 10px, 0);
+    opacity: 0.55;
+  }
+}
+.ember {
+  will-change: transform, opacity;
+  animation-name: ember-drift;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ember {
+    animation: none;
+  }
 }

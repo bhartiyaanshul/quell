@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, Github, Menu, X } from "lucide-react";
 import Image from "next/image";
 
@@ -17,15 +17,22 @@ const NAV_LINKS: { label: string; href: string; hint: string }[] = [
 ];
 
 export function Navbar() {
-  const { scrollY } = useScroll();
-  const bg = useTransform(
-    scrollY,
-    [0, 120],
-    ["rgba(10,10,15,0)", "rgba(10,10,15,0.55)"]
-  );
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Close on escape, lock body scroll while open.
+  // Drive the bg fade with a class toggle, not framer-motion's `useScroll`.
+  // useScroll/useTransform re-renders the header on every scroll event;
+  // this listener sets state only when crossing the threshold.
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Close on escape, lock body scroll while drawer is open.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -42,53 +49,62 @@ export function Navbar() {
 
   return (
     <>
-      <motion.header
-        style={{ backgroundColor: bg }}
-        className="fixed inset-x-0 top-0 z-50 backdrop-blur-md"
+      <header
+        className={
+          "fixed inset-x-0 top-0 z-50 transition-colors duration-300 " +
+          (scrolled
+            ? "bg-bg-base/70 backdrop-blur-md"
+            : "bg-transparent backdrop-blur-0")
+        }
       >
-        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
-          {/* Left pill — Menu */}
-          <button
-            type="button"
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-            className="group relative inline-flex h-9 items-center gap-2 rounded-full border border-border bg-bg-raised/80 pl-3 pr-3.5 text-xs font-medium text-fg-muted backdrop-blur-md transition hover:border-border-bright hover:text-fg sm:text-sm"
-          >
-            <span className="relative grid h-4 w-4 place-items-center">
-              <AnimatePresence initial={false} mode="wait">
-                {open ? (
-                  <motion.span
-                    key="x"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute inset-0 grid place-items-center"
-                  >
-                    <X size={14} />
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="m"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute inset-0 grid place-items-center"
-                  >
-                    <Menu size={14} />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </span>
-            <span>{open ? "Close" : "Menu"}</span>
-          </button>
+        {/* 3-column grid keeps the wordmark perfectly centred regardless of
+            the left/right pill widths. `justify-between` on a flex row drifts
+            the centre item whenever the two ends aren't equal width. */}
+        <nav className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-4">
+          {/* Left — Menu */}
+          <div className="flex justify-start">
+            <button
+              type="button"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}
+              className="group relative inline-flex h-9 items-center gap-2 rounded-full border border-border bg-bg-raised/80 pl-3 pr-3.5 text-xs font-medium text-fg-muted backdrop-blur-md transition hover:border-border-bright hover:text-fg sm:text-sm"
+            >
+              <span className="relative grid h-4 w-4 place-items-center">
+                <AnimatePresence initial={false} mode="wait">
+                  {open ? (
+                    <motion.span
+                      key="x"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="absolute inset-0 grid place-items-center"
+                    >
+                      <X size={14} />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="m"
+                      initial={false}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="absolute inset-0 grid place-items-center"
+                    >
+                      <Menu size={14} />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </span>
+              <span>{open ? "Close" : "Menu"}</span>
+            </button>
+          </div>
 
-          {/* Centre — wordmark */}
+          {/* Centre — wordmark, perfectly centred via grid auto column. */}
           <a
             href="#top"
-            className="group flex items-center gap-2 text-fg"
+            className="group flex items-center justify-center gap-2 text-fg"
             aria-label="Quell home"
           >
             <Image
@@ -96,6 +112,7 @@ export function Navbar() {
               alt=""
               width={22}
               height={22}
+              priority
               className="transition-transform duration-500 group-hover:rotate-12"
             />
             <span className="text-xs font-semibold uppercase tracking-[0.32em] sm:text-sm">
@@ -104,7 +121,7 @@ export function Navbar() {
           </a>
 
           {/* Right — pill group */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             <a
               href={REPO_URL}
               target="_blank"
@@ -122,7 +139,7 @@ export function Navbar() {
             </a>
           </div>
         </nav>
-      </motion.header>
+      </header>
 
       {/* Drawer overlay + panel */}
       <AnimatePresence>

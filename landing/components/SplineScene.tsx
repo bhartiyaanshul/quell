@@ -24,15 +24,23 @@ export function SplineScene({ className, parallax = 0.05 }: Props) {
   const stageRef = useRef<HTMLDivElement | null>(null);
 
   // Mouse parallax — tilts the stage on a perspective container.
+  // Only runs while the stage is visible; pauses rAF + listeners off-screen.
+  // Skipped entirely below `lg` (the orb is hidden there) and when the user
+  // prefers reduced motion.
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!window.matchMedia("(min-width: 1024px)").matches) return;
 
     let raf = 0;
     let targetX = 0;
     let targetY = 0;
     let curX = 0;
     let curY = 0;
+    let visible = false;
+    let listening = false;
 
     const onMove = (e: MouseEvent) => {
       const rect = stage.getBoundingClientRect();
@@ -43,18 +51,56 @@ export function SplineScene({ className, parallax = 0.05 }: Props) {
     };
 
     const tick = () => {
-      curX += (targetX - curX) * 0.06;
-      curY += (targetY - curY) * 0.06;
+      const dx = targetX - curX;
+      const dy = targetY - curY;
+      // settle: stop the rAF loop once we're at rest — mousemove restarts it.
+      if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) {
+        raf = 0;
+        return;
+      }
+      curX += dx * 0.06;
+      curY += dy * 0.06;
       stage.style.transform = `rotateY(${(-curX).toFixed(
         3
       )}deg) rotateX(${curY.toFixed(3)}deg)`;
       raf = requestAnimationFrame(tick);
     };
-    window.addEventListener("mousemove", onMove);
-    raf = requestAnimationFrame(tick);
+
+    const onMoveAndKick = (e: MouseEvent) => {
+      onMove(e);
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    const attach = () => {
+      if (listening) return;
+      window.addEventListener("mousemove", onMoveAndKick, { passive: true });
+      listening = true;
+    };
+    const detach = () => {
+      if (!listening) return;
+      window.removeEventListener("mousemove", onMoveAndKick);
+      listening = false;
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          visible = entry.isIntersecting;
+          if (visible) attach();
+          else detach();
+        }
+      },
+      { threshold: 0 }
+    );
+    io.observe(stage);
+
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("mousemove", onMove);
+      io.disconnect();
+      detach();
     };
   }, [parallax]);
 
@@ -198,20 +244,13 @@ function FloatingPanel({
         transformStyle: "preserve-3d",
       }}
     >
+      {/* Entry animation only — the old infinite y-drift was 3 JS animation
+          loops running forever, which compounded with the mouse-parallax rAF. */}
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1, y: drift.y }}
-        transition={{
-          opacity: { duration: 0.9, delay: enterDelay, ease: [0.22, 1, 0.36, 1] },
-          scale: { duration: 0.9, delay: enterDelay, ease: [0.22, 1, 0.36, 1] },
-          y: {
-            duration: drift.duration,
-            delay: drift.delay,
-            ease: "easeInOut",
-            repeat: Infinity,
-          },
-        }}
-        className={`overflow-hidden rounded-2xl border border-border bg-bg-raised/55 backdrop-blur-2xl ${ringByTone[tone]}`}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.9, delay: enterDelay, ease: [0.22, 1, 0.36, 1] }}
+        className={`overflow-hidden rounded-2xl border border-border bg-bg-raised/90 ${ringByTone[tone]}`}
       >
         {children}
       </motion.div>

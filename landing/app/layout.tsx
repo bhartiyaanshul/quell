@@ -77,9 +77,14 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{ __html: EXTENSION_FILTER_SCRIPT }}
         />
-        {/* Preload the cinematic hero photo so it lands before the
-            scramble + GSAP timeline kicks in. */}
-        <link rel="preload" as="image" href="/bg/hero.jpg" />
+        {/* Preload only the WebP — modern browsers pick this up; older
+            browsers fall back to the JPG via <picture>. ~122KB. */}
+        <link
+          rel="preload"
+          as="image"
+          href="/bg/hero.webp"
+          type="image/webp"
+        />
       </head>
       <body className="bg-bg-base font-sans text-fg antialiased selection:bg-accent/30">
         <ExtensionErrorFilter />

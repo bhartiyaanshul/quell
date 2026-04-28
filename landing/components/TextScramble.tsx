@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const DEFAULT_GLYPHS = "!<>-_\\/[]{}—=+*^?#________";
 
@@ -18,8 +18,14 @@ type Props = {
 
 /**
  * Character-by-character scramble reveal. Glyphs cycle randomly
- * before each character resolves to its final value. Total time
- * is `duration` (default 1500ms).
+ * before each character resolves to its final value.
+ *
+ * Performance notes:
+ *  - Writes to the DOM via ref.textContent (no React state per frame)
+ *  - Caps frame rate to ~30fps — visually identical, half the work
+ *  - Skipped entirely on small screens (we have ~19 instances on the page)
+ *  - Skipped under prefers-reduced-motion
+ *  - IntersectionObserver runs the animation once per node
  */
 export function TextScramble({
   text,
@@ -31,45 +37,61 @@ export function TextScramble({
   delay = 0,
 }: Props) {
   const ref = useRef<HTMLSpanElement | null>(null);
-  const [output, setOutput] = useState(text);
-  const [hasRun, setHasRun] = useState(false);
 
   useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
     if (typeof window === "undefined") return;
+
+    // Reset to final text up-front, then optionally scramble.
+    node.textContent = text;
+
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (reduce) {
-      setOutput(text);
-      return;
-    }
+    if (reduce) return;
 
-    let raf: number;
-    let timeout: ReturnType<typeof setTimeout>;
+    // Skip the (expensive) scramble on small screens — text is small,
+    // the effect adds little, and the rAF storm hurts on mobile.
+    const isSmall = !window.matchMedia("(min-width: 640px)").matches;
+    if (isSmall) return;
+
+    let raf = 0;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let observer: IntersectionObserver | undefined;
+    let started = false;
 
     const run = () => {
       const start = performance.now() + delay;
       const chars = text.split("");
+      let lastFrame = 0;
+      // ~30fps cap
+      const minFrameMs = 33;
 
       const tick = (now: number) => {
+        if (now - lastFrame < minFrameMs) {
+          raf = requestAnimationFrame(tick);
+          return;
+        }
+        lastFrame = now;
+
         const elapsed = Math.max(0, now - start);
         const progress = Math.min(1, elapsed / duration);
         const revealed = Math.floor(progress * chars.length);
 
-        const next = chars
-          .map((ch, i) => {
-            if (ch === " ") return " ";
-            if (i < revealed) return ch;
-            return glyphs[Math.floor(Math.random() * glyphs.length)];
-          })
-          .join("");
-
-        setOutput(next);
+        let next = "";
+        for (let i = 0; i < chars.length; i++) {
+          const ch = chars[i];
+          if (ch === " ") next += " ";
+          else if (i < revealed) next += ch;
+          else next += glyphs[(Math.random() * glyphs.length) | 0];
+        }
+        node.textContent = next;
 
         if (progress < 1) {
           raf = requestAnimationFrame(tick);
         } else {
-          setOutput(text);
+          node.textContent = text;
         }
       };
 
@@ -79,31 +101,27 @@ export function TextScramble({
     if (trigger === "mount") {
       timeout = setTimeout(run, 0);
     } else {
-      const node = ref.current;
-      if (!node) return;
-      const observer = new IntersectionObserver(
+      observer = new IntersectionObserver(
         (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && !hasRun) {
-              setHasRun(true);
+          for (const entry of entries) {
+            if (entry.isIntersecting && !started) {
+              started = true;
               run();
+              observer?.disconnect();
             }
-          });
+          }
         },
         { threshold: 0.4 }
       );
       observer.observe(node);
-      return () => {
-        observer.disconnect();
-        if (raf) cancelAnimationFrame(raf);
-      };
     }
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
       if (timeout) clearTimeout(timeout);
+      observer?.disconnect();
     };
-  }, [text, duration, glyphs, trigger, delay, hasRun]);
+  }, [text, duration, glyphs, trigger, delay]);
 
   const Component = Tag as React.ElementType;
   return (
@@ -112,7 +130,7 @@ export function TextScramble({
       className={`scramble ${className ?? ""}`}
       aria-label={text}
     >
-      {output}
+      {text}
     </Component>
   );
 }

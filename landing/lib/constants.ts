@@ -112,6 +112,14 @@ export const PIPELINE_STEPS = [
   },
 ] as const;
 
+/**
+ * Per-skill data for the SkillsShowcase. Each skill has:
+ *  - accent: tailwind text-color class for badges/icons (gives each card its
+ *    own visual identity — they used to all look identical at thumbnail size)
+ *  - icon: Lucide icon name resolved in SkillsShowcase
+ *  - frames: three mini-mocks rendered as HTML/CSS (no images). The hover
+ *    cycler steps terminal → analysis → diff.
+ */
 export const SKILLS_SHOWCASE = [
   {
     id: "postgres-deadlock",
@@ -120,11 +128,35 @@ export const SKILLS_SHOWCASE = [
     year: "2026",
     description:
       "Detects two transactions blocking each other; pulls the deadlock graph + offending statements; drafts a retry-with-backoff patch.",
-    slides: [
-      "/skills/postgres-deadlock-1.svg",
-      "/skills/postgres-deadlock-2.svg",
-      "/skills/postgres-deadlock-3.svg",
-    ],
+    accent: "sky",
+    icon: "database",
+    frames: {
+      terminal: {
+        cmd: "psql -c 'SELECT * FROM pg_locks'",
+        lines: [
+          { kind: "err", text: "ERROR  deadlock detected (txn 4218 ↔ 4219)" },
+          { kind: "info", text: "detector: skill=postgres_deadlock matched" },
+          { kind: "muted", text: "tool: pg_stat_activity (42ms)" },
+        ],
+      },
+      analysis: {
+        title: "deadlock graph",
+        bullets: [
+          "txn 4218 → row id=$1",
+          "txn 4219 → row id=$2",
+          "→ sort ids before UPDATE",
+        ],
+      },
+      diff: {
+        file: "orders_repo.py",
+        lines: [
+          { kind: "rm", text: "for oid in ids:" },
+          { kind: "add", text: "for oid in sorted(ids):" },
+          { kind: "add", text: "  for attempt in range(3):" },
+          { kind: "add", text: "    backoff(attempt)" },
+        ],
+      },
+    },
   },
   {
     id: "stripe-webhook",
@@ -133,11 +165,34 @@ export const SKILLS_SHOWCASE = [
     year: "2026",
     description:
       "Replays the last 50 failed webhook deliveries, classifies signature vs handler errors, and proposes the missing endpoint or signing-secret rotation.",
-    slides: [
-      "/skills/stripe-webhook-1.svg",
-      "/skills/stripe-webhook-2.svg",
-      "/skills/stripe-webhook-3.svg",
-    ],
+    accent: "violet",
+    icon: "credit-card",
+    frames: {
+      terminal: {
+        cmd: "stripe events list --type=payment_intent",
+        lines: [
+          { kind: "err", text: "ERROR  POST /api/stripe → 400 (50 last hour)" },
+          { kind: "info", text: "detector: skill=stripe_webhook matched" },
+          { kind: "muted", text: "47/50 share signature mismatch" },
+        ],
+      },
+      analysis: {
+        title: "root cause",
+        bullets: [
+          "STRIPE_WEBHOOK_SECRET rotated 2026-04-22",
+          "deploy didn't pull new env",
+          "→ rotate or pin signing secret",
+        ],
+      },
+      diff: {
+        file: "api/stripe/route.ts",
+        lines: [
+          { kind: "rm", text: "const sig = req.headers['stripe-sig']" },
+          { kind: "add", text: "const sig = req.headers.get('stripe-sig')" },
+          { kind: "add", text: "verify(req.body, sig, env.STRIPE_SECRET)" },
+        ],
+      },
+    },
   },
   {
     id: "oom-kill",
@@ -146,11 +201,34 @@ export const SKILLS_SHOWCASE = [
     year: "2026",
     description:
       "Correlates dmesg OOM lines with cgroup limits and process RSS history; identifies the leaking allocator and suggests a memory-limit bump or fix.",
-    slides: [
-      "/skills/oom-kill-1.svg",
-      "/skills/oom-kill-2.svg",
-      "/skills/oom-kill-3.svg",
-    ],
+    accent: "rose",
+    icon: "hard-drive",
+    frames: {
+      terminal: {
+        cmd: "dmesg | grep -i oom",
+        lines: [
+          { kind: "err", text: "Out of memory: Killed process 8421 (node)" },
+          { kind: "info", text: "cgroup: limit=512MiB rss=518MiB" },
+          { kind: "muted", text: "tool: rss_history --pid=8421" },
+        ],
+      },
+      analysis: {
+        title: "leak profile",
+        bullets: [
+          "RSS climb 2.1MiB/min for 4h",
+          "GC pauses spike at /api/upload",
+          "→ stream uploads, don't buffer",
+        ],
+      },
+      diff: {
+        file: "api/upload.ts",
+        lines: [
+          { kind: "rm", text: "const buf = await readAll(req.body)" },
+          { kind: "add", text: "await pipeline(req.body, writeStream)" },
+          { kind: "add", text: "// memory now O(chunk), not O(file)" },
+        ],
+      },
+    },
   },
   {
     id: "ssl-expiry",
@@ -159,11 +237,35 @@ export const SKILLS_SHOWCASE = [
     year: "2026",
     description:
       "Probes every public endpoint for cert chain + expiry; spots near-expiry certs, points to the renewal job, and drafts a one-line cron fix.",
-    slides: [
-      "/skills/ssl-expiry-1.svg",
-      "/skills/ssl-expiry-2.svg",
-      "/skills/ssl-expiry-3.svg",
-    ],
+    accent: "emerald",
+    icon: "lock",
+    frames: {
+      terminal: {
+        cmd: "openssl s_client -connect api.example.com:443",
+        lines: [
+          { kind: "warn", text: "WARN   cert expires in 4 days (api.*)" },
+          { kind: "info", text: "detector: skill=ssl_expiry matched" },
+          { kind: "muted", text: "renewal cron last run: 31 days ago" },
+        ],
+      },
+      analysis: {
+        title: "renewal chain",
+        bullets: [
+          "certbot installed, cron disabled",
+          "deploy 2026-03-30 wiped /etc/cron.d",
+          "→ restore cron + force renew now",
+        ],
+      },
+      diff: {
+        file: "infra/cron.tf",
+        lines: [
+          { kind: "add", text: '+ resource "cron" "certbot" {' },
+          { kind: "add", text: '+   schedule = "0 3 * * *"' },
+          { kind: "add", text: '+   command  = "certbot renew"' },
+          { kind: "add", text: "+ }" },
+        ],
+      },
+    },
   },
   {
     id: "k8s-crashloop",
@@ -172,11 +274,35 @@ export const SKILLS_SHOWCASE = [
     year: "2026",
     description:
       "Runs kubectl describe/logs/events across the failing pod; isolates the failing container, surfaces the readiness probe diff, and drafts a manifest patch.",
-    slides: [
-      "/skills/k8s-crashloop-1.svg",
-      "/skills/k8s-crashloop-2.svg",
-      "/skills/k8s-crashloop-3.svg",
-    ],
+    accent: "amber",
+    icon: "boxes",
+    frames: {
+      terminal: {
+        cmd: "kubectl describe pod api-7d49 -n prod",
+        lines: [
+          { kind: "err", text: "CrashLoopBackOff (restarts: 17)" },
+          { kind: "info", text: "Readiness probe failed: 503 /healthz" },
+          { kind: "muted", text: "tool: kubectl logs --previous" },
+        ],
+      },
+      analysis: {
+        title: "probe diff",
+        bullets: [
+          "/healthz boots in ~12s",
+          "readiness initialDelay = 3s",
+          "→ raise to 20s, add startup probe",
+        ],
+      },
+      diff: {
+        file: "k8s/api.yaml",
+        lines: [
+          { kind: "rm", text: "  initialDelaySeconds: 3" },
+          { kind: "add", text: "  initialDelaySeconds: 20" },
+          { kind: "add", text: "startupProbe:" },
+          { kind: "add", text: "  failureThreshold: 30" },
+        ],
+      },
+    },
   },
   {
     id: "openai-rate-limit",
@@ -185,11 +311,35 @@ export const SKILLS_SHOWCASE = [
     year: "2026",
     description:
       "Spots 429-burst patterns; correlates with deploy windows; suggests a token-bucket + provider-failover patch grounded in your existing client.",
-    slides: [
-      "/skills/openai-rate-limit-1.svg",
-      "/skills/openai-rate-limit-2.svg",
-      "/skills/openai-rate-limit-3.svg",
-    ],
+    accent: "lime",
+    icon: "zap",
+    frames: {
+      terminal: {
+        cmd: "tail -f logs/api.log | grep 429",
+        lines: [
+          { kind: "err", text: "429 Too Many Requests (487 in 60s)" },
+          { kind: "info", text: "burst correlates w/ deploy 14:02" },
+          { kind: "muted", text: "tool: rate_card --provider=openai" },
+        ],
+      },
+      analysis: {
+        title: "queue strategy",
+        bullets: [
+          "spike: 12k req/min after deploy",
+          "single-tenant token bucket",
+          "→ failover to anthropic/* on 429",
+        ],
+      },
+      diff: {
+        file: "lib/llm.ts",
+        lines: [
+          { kind: "add", text: "const limiter = tokenBucket({ rps: 50 })" },
+          { kind: "add", text: "providers: ['openai/*', 'anthropic/*']" },
+          { kind: "rm", text: "await openai.chat(...)" },
+          { kind: "add", text: "await limiter.run(() => llm.chat(...))" },
+        ],
+      },
+    },
   },
 ] as const;
 

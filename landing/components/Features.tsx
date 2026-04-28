@@ -14,7 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { GridDistortion } from "@/components/GridDistortion";
 import { SectionHeader } from "@/components/SectionHeader";
 import { TextScramble } from "@/components/TextScramble";
 import { FEATURES } from "@/lib/constants";
@@ -37,13 +36,11 @@ export function Features() {
       id="features"
       className="relative isolate overflow-hidden bg-bg-base py-24 sm:py-28"
     >
-      {/* WebGL grid distortion — subtle, tucked behind the cards */}
+      {/* Static gradient backdrop — replaces the WebGL shader for perf. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.18]"
-      >
-        <GridDistortion strength={0.3} relaxation={0.93} />
-      </div>
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(251,146,60,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(167,139,250,0.10),transparent_60%)]"
+      />
       {/* readability mask */}
       <div
         aria-hidden

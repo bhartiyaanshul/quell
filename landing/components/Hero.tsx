@@ -1,13 +1,10 @@
 "use client";
 
-import { useRef } from "react";
-import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Github, Sparkles } from "lucide-react";
 
 import { AnimatedGrid } from "@/components/AnimatedGrid";
 import { SplineScene as HeroOrb } from "@/components/SplineScene";
-import { useGsap, gsap } from "@/lib/gsap";
 import { REPO_URL } from "@/lib/constants";
 
 // Hook: anthropomorphic — Quell as a teammate.
@@ -19,35 +16,9 @@ const SUBLINE =
 
 export function Hero() {
   const reduce = useReducedMotion();
-  const sectionRef = useRef<HTMLElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-
-  // Scroll-driven 3D tilt (desktop only, respects reduced motion).
-  useGsap(
-    () => {
-      const stage = stageRef.current;
-      if (!stage) return;
-      const mq = window.matchMedia(
-        "(min-width: 768px) and (prefers-reduced-motion: no-preference)"
-      );
-      if (!mq.matches) return;
-
-      gsap.to(stage, {
-        rotateX: 8,
-        scale: 0.92,
-        y: -60,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: "+=100%",
-          scrub: true,
-        },
-      });
-    },
-    sectionRef,
-    []
-  );
+  // Note: the old GSAP scroll-tilt animation was removed. The hero is no
+  // longer sticky, so the tilt was invisible after the first viewport of
+  // scroll yet still ran a `scrub: true` ScrollTrigger every scroll frame.
 
   // Word-by-word reveal — cinematic at hero scale (slide + blur).
   const container = {
@@ -80,21 +51,21 @@ export function Hero() {
 
   return (
     <section
-      ref={sectionRef}
       id="top"
       className="relative isolate flex flex-col overflow-hidden lg:min-h-[100svh]"
-      style={{ transformStyle: "preserve-3d" }}
     >
-      {/* Photo background */}
+      {/* Photo background — WebP first, JPG fallback. ~122KB vs ~500KB. */}
       <div className="absolute inset-0 -z-20">
-        <Image
-          src="/bg/hero.jpg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover opacity-55"
-        />
+        <picture>
+          <source srcSet="/bg/hero.webp" type="image/webp" />
+          <img
+            src="/bg/hero.jpg"
+            alt=""
+            decoding="async"
+            fetchPriority="high"
+            className="h-full w-full object-cover opacity-55"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-b from-bg-base/65 via-bg-base/55 to-bg-base" />
       </div>
 
@@ -105,7 +76,6 @@ export function Hero() {
       <div className="noise-overlay-bright pointer-events-none absolute inset-0 -z-10" />
 
       <div
-        ref={stageRef}
         className="relative mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-y-10 px-5 pb-16 pt-[96px] sm:gap-y-12 sm:px-6 sm:pb-20 sm:pt-[112px] lg:grid-cols-[1.08fr_1fr] lg:gap-x-12 lg:pb-12 xl:gap-x-16"
       >
         {/* Left — copy */}
