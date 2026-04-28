@@ -77,6 +77,9 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{ __html: EXTENSION_FILTER_SCRIPT }}
         />
+        {/* Preload the cinematic hero photo so it lands before the
+            scramble + GSAP timeline kicks in. */}
+        <link rel="preload" as="image" href="/bg/hero.jpg" />
       </head>
       <body className="bg-bg-base font-sans text-fg antialiased selection:bg-accent/30">
         <ExtensionErrorFilter />

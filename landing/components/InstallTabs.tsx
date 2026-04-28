@@ -28,8 +28,9 @@ export function InstallTabs() {
   return (
     <section
       id="install"
-      className="relative mx-auto max-w-5xl px-6 py-24 sm:py-28"
+      className="relative bg-bg-base py-24 sm:py-28"
     >
+      <div className="mx-auto max-w-5xl px-6">
       <SectionHeader
         eyebrow="Install in 10 seconds"
         title={
@@ -132,6 +133,7 @@ export function InstallTabs() {
         &middot; <span className="font-mono text-fg-muted">quell doctor</span> &middot;{" "}
         <span className="font-mono text-fg-muted">quell watch</span>.
       </p>
+      </div>
     </section>
   );
 }

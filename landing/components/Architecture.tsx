@@ -19,8 +19,9 @@ export function Architecture() {
   return (
     <section
       id="architecture"
-      className="relative mx-auto max-w-6xl px-6 py-28 sm:py-32"
+      className="relative bg-bg-base py-28 sm:py-32"
     >
+      <div className="mx-auto max-w-6xl px-6">
       <SectionHeader
         eyebrow="Under the hood"
         title={
@@ -115,6 +116,7 @@ export function Architecture() {
           <Node title="Dashboard" subtitle="Next.js + FastAPI" />
           <Node title="Cost + budgets" subtitle="per-model rate card" />
         </div>
+      </div>
       </div>
     </section>
   );

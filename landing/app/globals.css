@@ -15,22 +15,33 @@ body {
 /* Smooth scrolling between anchor sections. */
 html {
   scroll-behavior: smooth;
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
 }
 
-/* Scrollbar — dark, slim, tasteful. */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+body {
+  transform-style: preserve-3d;
 }
-::-webkit-scrollbar-track {
-  background: #0a0a0f;
+
+/* Scramble glyphs use tabular numerals so the line doesn't reflow as
+   each character resolves to its final form. */
+.scramble {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
-::-webkit-scrollbar-thumb {
-  background: #27272a;
-  border-radius: 9999px;
+
+/* Scrollbar — hidden, but scroll still works.
+   The page is intentionally minimalist; the scrollbar took attention
+   away from the cinematic stack. */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 /* ---------------------------------------------------------------------
@@ -92,6 +103,18 @@ html {
         transparent
       )
       0 0 / 200% 100%;
+  }
+
+  /* Bright noise variant for the cinematic hero — slightly more visible
+     than .noise-overlay so the photo background feels filmic. */
+  .noise-overlay-bright::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' /></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 }
 

@@ -112,6 +112,87 @@ export const PIPELINE_STEPS = [
   },
 ] as const;
 
+export const SKILLS_SHOWCASE = [
+  {
+    id: "postgres-deadlock",
+    title: "Postgres deadlock",
+    tags: ["pg_locks", "psql", "PgBouncer"],
+    year: "2026",
+    description:
+      "Detects two transactions blocking each other; pulls the deadlock graph + offending statements; drafts a retry-with-backoff patch.",
+    slides: [
+      "/skills/postgres-deadlock-1.svg",
+      "/skills/postgres-deadlock-2.svg",
+      "/skills/postgres-deadlock-3.svg",
+    ],
+  },
+  {
+    id: "stripe-webhook",
+    title: "Stripe webhook failure",
+    tags: ["webhooks", "Stripe API", "signature"],
+    year: "2026",
+    description:
+      "Replays the last 50 failed webhook deliveries, classifies signature vs handler errors, and proposes the missing endpoint or signing-secret rotation.",
+    slides: [
+      "/skills/stripe-webhook-1.svg",
+      "/skills/stripe-webhook-2.svg",
+      "/skills/stripe-webhook-3.svg",
+    ],
+  },
+  {
+    id: "oom-kill",
+    title: "OOM kill (Linux + container)",
+    tags: ["dmesg", "cgroups", "metrics"],
+    year: "2026",
+    description:
+      "Correlates dmesg OOM lines with cgroup limits and process RSS history; identifies the leaking allocator and suggests a memory-limit bump or fix.",
+    slides: [
+      "/skills/oom-kill-1.svg",
+      "/skills/oom-kill-2.svg",
+      "/skills/oom-kill-3.svg",
+    ],
+  },
+  {
+    id: "ssl-expiry",
+    title: "SSL certificate expiry",
+    tags: ["openssl", "ACME", "Let's Encrypt"],
+    year: "2026",
+    description:
+      "Probes every public endpoint for cert chain + expiry; spots near-expiry certs, points to the renewal job, and drafts a one-line cron fix.",
+    slides: [
+      "/skills/ssl-expiry-1.svg",
+      "/skills/ssl-expiry-2.svg",
+      "/skills/ssl-expiry-3.svg",
+    ],
+  },
+  {
+    id: "k8s-crashloop",
+    title: "K8s pod crashloop",
+    tags: ["kubectl", "events", "probes"],
+    year: "2026",
+    description:
+      "Runs kubectl describe/logs/events across the failing pod; isolates the failing container, surfaces the readiness probe diff, and drafts a manifest patch.",
+    slides: [
+      "/skills/k8s-crashloop-1.svg",
+      "/skills/k8s-crashloop-2.svg",
+      "/skills/k8s-crashloop-3.svg",
+    ],
+  },
+  {
+    id: "openai-rate-limit",
+    title: "OpenAI rate-limit storm",
+    tags: ["LiteLLM", "retries", "queueing"],
+    year: "2026",
+    description:
+      "Spots 429-burst patterns; correlates with deploy windows; suggests a token-bucket + provider-failover patch grounded in your existing client.",
+    slides: [
+      "/skills/openai-rate-limit-1.svg",
+      "/skills/openai-rate-limit-2.svg",
+      "/skills/openai-rate-limit-3.svg",
+    ],
+  },
+] as const;
+
 export const TERMINAL_LINES = [
   { prompt: "~/src/my-app", cmd: "quell watch", output: null },
   {

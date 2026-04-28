@@ -1,118 +1,179 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Activity, Bot, FileCheck2, Siren } from "lucide-react";
 
 import { SectionHeader } from "@/components/SectionHeader";
+import { TextScramble } from "@/components/TextScramble";
+import { useGsap, gsap, ScrollTrigger } from "@/lib/gsap";
 import { PIPELINE_STEPS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const ICONS = [Activity, Siren, Bot, FileCheck2] as const;
 
 /**
- * Animated four-step pipeline.
- *
- * The connecting line between steps draws in when the section comes
- * into view (scaleX from 0 → 1 along its own x-axis).  Each step then
- * slides + fades in with a stagger.  Numbered rings pulse to reinforce
- * the "alive" feel.
+ * Scroll-driven 4-slide pipeline. Outer section is 400vh; the inner
+ * stage is sticky and crossfades between PIPELINE_STEPS slides as
+ * scroll progress goes 0 → 1.
  */
 export function HowItWorks() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-120px" });
+  const sectionRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const slidesRef = useRef<(HTMLDivElement | null)[]>([]);
+  const dotsRef = useRef<(HTMLSpanElement | null)[]>([]);
+  const [active, setActive] = useState(0);
+
+  useGsap(
+    () => {
+      const section = sectionRef.current;
+      const slides = slidesRef.current.filter(Boolean) as HTMLDivElement[];
+      if (!section || slides.length === 0) return;
+
+      // Initial state — only first slide visible.
+      slides.forEach((s, i) => {
+        s.style.opacity = i === 0 ? "1" : "0";
+        s.style.transform = `translate3d(0, ${i === 0 ? 0 : 24}px, 0)`;
+        s.style.transition = "opacity 350ms ease, transform 350ms ease";
+        s.style.willChange = "opacity, transform";
+      });
+
+      const trigger = ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        onUpdate: (self) => {
+          const idx = Math.min(
+            slides.length - 1,
+            Math.floor(self.progress * slides.length)
+          );
+          setActive(idx);
+          slides.forEach((s, i) => {
+            const isActive = i === idx;
+            s.style.opacity = isActive ? "1" : "0";
+            s.style.transform = `translate3d(0, ${
+              isActive ? 0 : i < idx ? -24 : 24
+            }px, 0)`;
+            s.style.pointerEvents = isActive ? "auto" : "none";
+          });
+        },
+      });
+
+      return () => {
+        trigger.kill();
+      };
+    },
+    sectionRef,
+    []
+  );
 
   return (
     <section
+      ref={sectionRef}
       id="how-it-works"
-      className="relative mx-auto max-w-6xl px-6 py-28 sm:py-32"
+      className="relative bg-bg-base"
+      style={{ height: `${PIPELINE_STEPS.length * 100}vh` }}
     >
-      <SectionHeader
-        eyebrow="How it works"
-        title={
-          <>
-            One watch loop.{" "}
-            <span className="text-gradient">Four deliberate stages.</span>
-          </>
-        }
-        body="From raw log line to draft report — and a Slack / Discord / Telegram ping — is usually under 30 seconds. Quell never auto-merges; a human always reviews the proposed fix."
-      />
+      <div
+        ref={stageRef}
+        className="sticky top-0 flex h-screen w-full items-center"
+      >
+        <div className="relative mx-auto w-full max-w-6xl px-6">
+          <SectionHeader
+            eyebrow="How it works"
+            title={
+              <>
+                One watch loop.{" "}
+                <span className="text-gradient">Four deliberate stages.</span>
+              </>
+            }
+            body="Scroll to step through. From raw log line to draft report — and a Slack / Discord / Telegram ping — is usually under 30 seconds."
+          />
 
-      <div ref={ref} className="relative mt-20">
-        {/* Connector line (desktop) */}
-        <motion.div
-          aria-hidden
-          initial={{ scaleX: 0 }}
-          animate={inView ? { scaleX: 1 } : {}}
-          transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-          style={{ transformOrigin: "0% 50%" }}
-          className="absolute left-[8%] right-[8%] top-[52px] hidden h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent md:block"
-        />
-
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 md:gap-6">
-          {PIPELINE_STEPS.map((step, i) => {
-            const Icon = ICONS[i];
-            return (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 40 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  duration: 0.7,
-                  delay: 0.25 + i * 0.14,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="relative"
-              >
-                {/* Numbered ring */}
-                <div className="relative z-10 mx-auto flex h-[104px] w-[104px] items-center justify-center">
+          <div className="relative mt-14 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-16">
+            {/* Slide stage */}
+            <div className="relative h-[360px] sm:h-[320px]">
+              {PIPELINE_STEPS.map((step, i) => {
+                const Icon = ICONS[i];
+                return (
                   <div
-                    className={cn(
-                      "absolute inset-0 rounded-full border border-border bg-bg-raised/70 backdrop-blur",
-                    )}
-                  />
-                  {/* Pulsing glow */}
-                  <motion.div
-                    aria-hidden
-                    animate={
-                      inView
-                        ? {
-                            scale: [1, 1.08, 1],
-                            opacity: [0.4, 0.8, 0.4],
-                          }
-                        : {}
-                    }
-                    transition={{
-                      duration: 3.2,
-                      repeat: Infinity,
-                      delay: i * 0.55,
-                      ease: "easeInOut",
+                    key={step.title}
+                    ref={(el) => {
+                      slidesRef.current[i] = el;
                     }}
-                    className="absolute inset-0 rounded-full bg-accent/20 blur-xl"
-                  />
-                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-accent/40 bg-accent/10 text-accent">
-                    <Icon size={22} strokeWidth={1.75} />
+                    className="absolute inset-0"
+                  >
+                    <div className="grid h-full grid-cols-1 items-center gap-8 sm:grid-cols-[120px_1fr]">
+                      {/* Big icon */}
+                      <div className="relative mx-auto h-28 w-28 sm:mx-0">
+                        <div className="absolute inset-0 rounded-3xl border border-border bg-bg-raised/70 backdrop-blur" />
+                        <div className="absolute inset-0 rounded-3xl bg-accent/15 blur-2xl" />
+                        <div className="relative flex h-full w-full items-center justify-center rounded-3xl border border-accent/40 bg-accent/8 text-accent">
+                          <Icon size={42} strokeWidth={1.5} />
+                        </div>
+                        <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-bg-base text-xs font-semibold text-fg">
+                          0{i + 1}
+                        </div>
+                      </div>
+                      {/* Copy */}
+                      <div>
+                        <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-dim">
+                          {step.tag}
+                        </div>
+                        <h3 className="mt-2 text-3xl font-semibold tracking-tight text-fg sm:text-4xl">
+                          <TextScramble
+                            text={step.title}
+                            trigger="inView"
+                            duration={1100}
+                          />
+                        </h3>
+                        <p className="mt-4 max-w-xl text-base leading-relaxed text-fg-muted">
+                          {step.body}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-bg-base text-xs font-semibold text-fg-muted">
-                    {i + 1}
-                  </div>
-                </div>
+                );
+              })}
+            </div>
 
-                {/* Card */}
-                <div className="mt-5 rounded-2xl border border-border bg-bg-raised/50 p-5 text-center backdrop-blur md:text-left">
-                  <h3 className="text-lg font-semibold tracking-tight text-fg">
+            {/* Vertical step dots */}
+            <div className="flex flex-row items-center justify-center gap-3 lg:flex-col">
+              {PIPELINE_STEPS.map((step, i) => (
+                <div key={step.title} className="group flex items-center gap-3">
+                  <span
+                    ref={(el) => {
+                      dotsRef.current[i] = el;
+                    }}
+                    className={cn(
+                      "relative flex h-6 w-6 items-center justify-center rounded-full border transition-colors duration-300",
+                      i === active
+                        ? "border-accent text-accent"
+                        : "border-border text-fg-dim"
+                    )}
+                  >
+                    {i === active && (
+                      <span className="absolute inset-0 animate-spin-slow rounded-full border border-dashed border-accent/60" />
+                    )}
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full transition",
+                        i === active ? "bg-accent" : "bg-fg-dim/60"
+                      )}
+                    />
+                  </span>
+                  <span
+                    className={cn(
+                      "hidden text-xs font-medium transition lg:inline",
+                      i === active ? "text-fg" : "text-fg-dim"
+                    )}
+                  >
                     {step.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-fg-muted">
-                    {step.body}
-                  </p>
-                  <div className="mt-4 inline-block rounded-full border border-border bg-bg-base px-2.5 py-1 font-mono text-[11px] text-fg-dim">
-                    {step.tag}
-                  </div>
+                  </span>
                 </div>
-              </motion.div>
-            );
-          })}
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

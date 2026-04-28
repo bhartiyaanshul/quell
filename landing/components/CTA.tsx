@@ -7,7 +7,7 @@ import { REPO_URL } from "@/lib/constants";
 
 export function CTA() {
   return (
-    <section className="relative mx-auto max-w-5xl px-6 py-28">
+    <section className="relative mx-auto max-w-5xl bg-bg-base px-6 py-28">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}

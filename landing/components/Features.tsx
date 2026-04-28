@@ -14,7 +14,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { GridDistortion } from "@/components/GridDistortion";
 import { SectionHeader } from "@/components/SectionHeader";
+import { TextScramble } from "@/components/TextScramble";
 import { FEATURES } from "@/lib/constants";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -31,7 +33,23 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 export function Features() {
   return (
-    <section id="features" className="relative mx-auto max-w-6xl px-6 py-24 sm:py-28">
+    <section
+      id="features"
+      className="relative isolate overflow-hidden bg-bg-base py-24 sm:py-28"
+    >
+      {/* WebGL grid distortion — subtle, tucked behind the cards */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.18]"
+      >
+        <GridDistortion strength={0.3} relaxation={0.93} />
+      </div>
+      {/* readability mask */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-bg-base via-bg-base/85 to-bg-base"
+      />
+      <div className="mx-auto max-w-6xl px-6">
       <SectionHeader
         eyebrow="Built for real on-call"
         title={
@@ -47,6 +65,7 @@ export function Features() {
         {FEATURES.map((f, i) => (
           <FeatureCard key={f.title} feature={f} index={i} />
         ))}
+      </div>
       </div>
     </section>
   );
@@ -95,7 +114,7 @@ function FeatureCard({
           <Icon size={20} strokeWidth={1.75} />
         </div>
         <h3 className="text-lg font-semibold tracking-tight text-fg">
-          {feature.title}
+          <TextScramble text={feature.title} trigger="inView" duration={1100} />
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-fg-muted">
           {feature.body}

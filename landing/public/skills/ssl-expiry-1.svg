@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0a0f"/>
+      <stop offset="1" stop-color="#13131c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.85" cy="0.05" r="0.7">
+      <stop offset="0" stop-color="#fb923c" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCool" cx="0.05" cy="0.95" r="0.7">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <rect width="1200" height="800" fill="url(#glow)"/>
+  <rect width="1200" height="800" fill="url(#glowCool)"/>
+  <rect x="80" y="40" width="1040" height="720" rx="14" fill="#12121a" stroke="#27272a"/>
+  <rect x="80" y="40" width="1040" height="44" rx="14" fill="#0d0d14"/>
+  <rect x="80" y="78" width="1040" height="6" fill="#27272a" opacity="0.6"/>
+  <circle cx="110" cy="64" r="6.5" fill="#3f3f46"/><circle cx="132" cy="64" r="6.5" fill="#3f3f46"/><circle cx="154" cy="64" r="6.5" fill="#3f3f46"/>
+  <text x="600" y="69" fill="#a1a1aa" font-size="14" text-anchor="middle">~/ssl-expiry — quell watch</text>
+  <text x="1090" y="69" fill="#71717a" font-size="12" text-anchor="end">tty</text><g><rect x="120" y="100" width="134" height="22" rx="11" fill="#fb923c" fill-opacity="0.16" stroke="#fb923c" stroke-opacity="0.45"/><text x="187" y="115" fill="#fb923c" font-size="12" text-anchor="middle">MONITOR ▸ DETECT</text></g><g><rect x="296" y="100" width="92" height="22" rx="11" fill="#fb923c" fill-opacity="0.16" stroke="#fb923c" stroke-opacity="0.45"/><text x="342" y="115" fill="#fb923c" font-size="12" text-anchor="middle">SSL EXPIRY</text></g>
+  <text x="120" y="160" fill="#fb923c" font-size="16" opacity="1">$ quell watch</text>
+  <text x="120" y="188" fill="#fafafa" font-size="16">08:00:01 INFO  monitor: tls_probes (24 endpoints)</text>
+  <text x="120" y="216" fill="#fb923c" font-size="16" opacity="1">08:00:03 WARN   api.example.com expires in 4d 02h</text>
+  <text x="120" y="244" fill="#fafafa" font-size="16">08:00:03 INFO  detector: skill=ssl_expiry matched</text>
+  <text x="120" y="272" fill="#a1a1aa" font-size="16" opacity="1">08:00:04 INFO  tool: openssl s_client -connect api.example.com:443</text>
+  <text x="120" y="300" fill="#a1a1aa" font-size="16" opacity="1">08:00:05 INFO  tool: code_read ops/cron/renew-certs.sh</text>
+  <text x="120" y="328" fill="#a1a1aa" font-size="16" opacity="1">08:00:07 INFO  tool: git_log ops/cron/renew-certs.sh</text>
+  <text x="120" y="356" fill="#fafafa" font-size="16">08:00:09 INFO  agent: cron last run 38 days ago (stalled)</text></svg>
