@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { Nav } from "@/components/Nav";
 import "./globals.css";
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-bg-base font-sans text-fg antialiased">
         <Nav />
         <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+        <Analytics />
       </body>
     </html>
   );
