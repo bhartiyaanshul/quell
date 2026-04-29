@@ -16,6 +16,10 @@ whichever your users' environment prefers.
 today.  Everything marked ⏳ flips to ✅ the moment the first `v0.1.0`
 tag is pushed and `release.yml` + `build-binaries.yml` run.
 
+**See [`docs/RELEASE.md`](../docs/RELEASE.md)** for the end-to-end
+release runbook (one-time secret setup, version-bump, tag push,
+verification).
+
 ---
 
 ## How one tag push cascades through every channel
@@ -136,17 +140,10 @@ Build + push is deferred to Phase 16 (see
 
 ## Release checklist
 
-On the day of cutting `v0.1.0`:
+The full end-to-end runbook is [`docs/RELEASE.md`](../docs/RELEASE.md).
+The two-line summary:
 
-1. Bump `quell/version.py` and `pyproject.toml` version field.
-2. Bump `packaging/npm/package.json` version field to match.
-3. `git tag v0.1.0 && git push --tags`.
-4. Watch `release.yml` + `build-binaries.yml` turn green in the
-   Actions tab.
-5. Confirm the GitHub release page has the wheel, sdist, and four
-   binary archives attached.
-6. `cd packaging/npm && npm publish --access public`.
-7. Fill in `packaging/homebrew/quell.rb` `url` + sha256s from the
-   published PyPI release and push to the tap repo.
-8. Smoke-test each channel on a fresh VM per
-   [`../docs/LAUNCH.md`](../docs/LAUNCH.md).
+1. `python scripts/check_versions.py --bump X.Y.Z` — bumps every version
+   string in lockstep.
+2. Tag from `main`: `git tag vX.Y.Z && git push --tags` — CI cascades
+   to PyPI, npm, Homebrew, and the prebuilt binaries automatically.

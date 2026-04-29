@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 # Opt into Node 24 for JavaScript-based actions.  GitHub flagged the
 # v4 / v5 majors as Node-20 and deprecated in Sept 2025; this variable
@@ -57,3 +57,10 @@ jobs:
 
       - name: Tests (pytest)
         run: poetry run pytest tests/ --tb=short -q
+
+      # Quell ships through five channels (PyPI, npm, Homebrew,
+      # prebuilt binary, curl-pipe) and each carries its own version
+      # string.  If they drift, a tag push silently publishes
+      # mismatched artefacts.  Catch it here, before tagging.
+      - name: Check version sync across distribution channels
+        run: python scripts/check_versions.py

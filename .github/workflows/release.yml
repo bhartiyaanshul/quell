@@ -30,7 +30,7 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Verify tag matches pyproject version
+      - name: Verify tag matches every version string
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
           pkg_version="$(poetry version -s)"
@@ -38,6 +38,8 @@ jobs:
             echo "Tag $tag_version does not match pyproject version $pkg_version" >&2
             exit 1
           fi
+          # Belt-and-braces: also ensures version.py / npm / homebrew agree.
+          python scripts/check_versions.py
 
       - name: Install dependencies
         run: poetry install --no-interaction
@@ -47,13 +49,17 @@ jobs:
 
       # Build the Next.js dashboard so its ``out/`` directory can be
       # copied into ``quell/dashboard/static/`` and bundled in the wheel.
+      # Skip cleanly if dashboard/ has been moved or removed — the
+      # wheel's MANIFEST treats the static export as optional.
       - name: Build dashboard frontend
+        if: hashFiles('dashboard/package.json') != ''
         working-directory: dashboard
         run: |
           npm ci
           npm run build
 
       - name: Bundle dashboard static into package
+        if: hashFiles('dashboard/package.json') != ''
         run: |
           rm -rf quell/dashboard/static
           cp -r dashboard/out quell/dashboard/static
@@ -71,3 +77,169 @@ jobs:
         with:
           files: dist/*
           generate_release_notes: true
+
+  # ---------------------------------------------------------------------------
+  # npm: publishes packaging/npm/ to npmjs.com.  Waits for build-binaries.yml
+  # to upload its archives first — the postinstall hook fetches them at
+  # `npm install` time, so publishing before they exist would brick every
+  # `npm i -g quell-agent` run for the window between the two workflows.
+  #
+  # Skipped when NPM_TOKEN is not configured (e.g. early-stage forks).
+  # ---------------------------------------------------------------------------
+  publish-npm:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Gate on NPM_TOKEN
+        id: gate
+        run: |
+          if [ -z "${NPM_TOKEN}" ]; then
+            echo "::warning::NPM_TOKEN secret not set — skipping npm publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.skip != 'true'
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Wait for prebuilt binaries on the release
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          required="quell-Darwin-arm64.tar.gz quell-Linux-x86_64.tar.gz quell-Windows-x86_64.zip"
+          deadline=$((SECONDS + 1800))   # 30 min budget
+          while :; do
+            assets="$(gh release view "$tag" --json assets --jq '[.assets[].name] | join(" ")' 2>/dev/null || echo '')"
+            missing=""
+            for f in $required; do
+              case " $assets " in *" $f "*) ;; *) missing="$missing $f" ;; esac
+            done
+            if [ -z "$missing" ]; then
+              echo "All binary archives present on release $tag"
+              break
+            fi
+            if [ $SECONDS -gt $deadline ]; then
+              echo "::error::Timed out waiting for binary archives:$missing" >&2
+              exit 1
+            fi
+            echo "  waiting for:$missing"
+            sleep 30
+          done
+
+      - name: Verify npm package version matches tag
+        if: steps.gate.outputs.skip != 'true'
+        working-directory: packaging/npm
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          pkg_version="$(node -p "require('./package.json').version")"
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "Tag $tag_version does not match npm package.json version $pkg_version" >&2
+            exit 1
+          fi
+
+      - name: Publish to npm
+        if: steps.gate.outputs.skip != 'true'
+        working-directory: packaging/npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Homebrew: rewrites packaging/homebrew/quell.rb with the published sdist's
+  # url + sha256 and pushes to bhartiyaanshul/homebrew-quell.  Users then
+  # install with `brew install bhartiyaanshul/quell/quell`.
+  #
+  # Requires a HOMEBREW_TAP_TOKEN secret — a fine-grained PAT with `contents:
+  # write` on the homebrew-quell repo.  Skipped if the secret is unset.
+  # ---------------------------------------------------------------------------
+  publish-homebrew:
+    needs: publish
+    runs-on: ubuntu-latest
+    env:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Gate on HOMEBREW_TAP_TOKEN
+        id: gate
+        run: |
+          if [ -z "${HOMEBREW_TAP_TOKEN}" ]; then
+            echo "::warning::HOMEBREW_TAP_TOKEN secret not set — skipping Homebrew tap update."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Resolve sdist url + sha256 from PyPI
+        if: steps.gate.outputs.skip != 'true'
+        id: pypi
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # Retry — PyPI's JSON cache can lag the publish call by ~30s.
+          for i in $(seq 1 20); do
+            payload="$(curl -fsSL "https://pypi.org/pypi/quell-agent/${version}/json" || true)"
+            if [ -n "$payload" ]; then break; fi
+            sleep 15
+          done
+          if [ -z "$payload" ]; then
+            echo "::error::Could not fetch quell-agent ${version} JSON from PyPI" >&2
+            exit 1
+          fi
+          url="$(echo "$payload" | python -c "import json,sys; d=json.load(sys.stdin); [print(u['url']) for u in d['urls'] if u['packagetype']=='sdist']")"
+          sha="$(echo "$payload" | python -c "import json,sys; d=json.load(sys.stdin); [print(u['digests']['sha256']) for u in d['urls'] if u['packagetype']=='sdist']")"
+          if [ -z "$url" ] || [ -z "$sha" ]; then
+            echo "::error::Could not find sdist url + sha256 in PyPI payload" >&2
+            exit 1
+          fi
+          echo "url=$url"   >> "$GITHUB_OUTPUT"
+          echo "sha=$sha"   >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Rewrite formula with the new sdist
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          python scripts/render_homebrew_formula.py \
+            --version "${{ steps.pypi.outputs.version }}" \
+            --url     "${{ steps.pypi.outputs.url }}" \
+            --sha256  "${{ steps.pypi.outputs.sha }}" \
+            --in      packaging/homebrew/quell.rb \
+            --out     /tmp/quell.rb
+
+      - name: Push formula to homebrew-quell tap
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          tap_dir="$(mktemp -d)"
+          git clone --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/bhartiyaanshul/homebrew-quell.git" \
+            "$tap_dir"
+          mkdir -p "$tap_dir/Formula"
+          cp /tmp/quell.rb "$tap_dir/Formula/quell.rb"
+          cd "$tap_dir"
+          git config user.name  "quell-release-bot"
+          git config user.email "quell-release-bot@users.noreply.github.com"
+          git add Formula/quell.rb
+          if git diff --cached --quiet; then
+            echo "Formula already up to date — nothing to commit."
+            exit 0
+          fi
+          git commit -m "quell ${{ steps.pypi.outputs.version }}"
+          git push origin HEAD:main
