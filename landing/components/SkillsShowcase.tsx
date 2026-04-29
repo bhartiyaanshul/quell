@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import { SectionHeader } from "@/components/SectionHeader";
-import { TextScramble } from "@/components/TextScramble";
 import { SKILLS_SHOWCASE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -246,7 +245,7 @@ function SkillCard({ skill, index }: { skill: Skill; index: number }) {
       <div className="p-5">
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-base font-semibold text-fg">
-            <TextScramble text={skill.title} trigger="inView" duration={1100} />
+            {skill.title}
           </h3>
           <span className="text-xs text-fg-dim">{skill.year}</span>
         </div>

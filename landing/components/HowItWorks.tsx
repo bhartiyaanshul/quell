@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Activity, Bot, FileCheck2, Siren } from "lucide-react";
 
 import { SectionHeader } from "@/components/SectionHeader";
-import { TextScramble } from "@/components/TextScramble";
 import { PIPELINE_STEPS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -109,11 +108,7 @@ export function HowItWorks() {
                       {step.tag}
                     </div>
                     <h3 className="mt-2 text-3xl font-semibold tracking-tight text-fg sm:text-4xl">
-                      <TextScramble
-                        text={step.title}
-                        trigger="inView"
-                        duration={1100}
-                      />
+                      {step.title}
                     </h3>
                     <p className="mt-4 max-w-xl text-base leading-relaxed text-fg-muted">
                       {step.body}

@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import { SectionHeader } from "@/components/SectionHeader";
-import { TextScramble } from "@/components/TextScramble";
 import { FEATURES } from "@/lib/constants";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -111,7 +110,7 @@ function FeatureCard({
           <Icon size={20} strokeWidth={1.75} />
         </div>
         <h3 className="text-lg font-semibold tracking-tight text-fg">
-          <TextScramble text={feature.title} trigger="inView" duration={1100} />
+          {feature.title}
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-fg-muted">
           {feature.body}
