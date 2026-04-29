@@ -18,11 +18,11 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quell — Your production's autonomous on-call",
+  title: "Quell — An on-call engineer that never sleeps",
   description:
     "Open-source multi-agent incident response. Quell watches production, investigates incidents via LLM-backed agents in a Docker sandbox, and produces a structured report for human review — all while you sleep.",
   openGraph: {
-    title: "Quell — Your production's autonomous on-call",
+    title: "Quell — An on-call engineer that never sleeps",
     description:
       "Watch production. Investigate incidents. Draft the fix. All while you sleep.",
     url: "https://quell.anshulbuilds.xyz",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Quell — Your production's autonomous on-call",
+    title: "Quell — An on-call engineer that never sleeps",
     description:
       "Watch production. Investigate incidents. Draft the fix. All while you sleep.",
     creator: "@Bhartiyaanshul",

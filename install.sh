@@ -123,7 +123,7 @@ pm_install() {
 # ---------------------------------------------------------------------------
 
 printf "\n${BOLD}Quell installer${RESET}\n"
-printf "${DIM}Your production's autonomous on-call.${RESET}\n\n"
+printf "${DIM}An on-call engineer that never sleeps.${RESET}\n\n"
 say "OS:   ${DIM}$OS (pm: $PKG)${RESET}"
 say "Ref:  ${DIM}$REF${RESET}"
 say "Mode: ${DIM}$( [ "$DEV_MODE" = "1" ] && echo 'dev (editable)' || echo 'binary → pipx fallback' )${RESET}"

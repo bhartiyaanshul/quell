@@ -1,4 +1,4 @@
-"""Quell — your production's autonomous on-call."""
+"""Quell — an on-call engineer that never sleeps."""
 
 from quell.version import __version__
 

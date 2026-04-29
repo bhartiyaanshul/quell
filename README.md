@@ -1,6 +1,6 @@
 <!-- Hero banner — renders natively on GitHub -->
 <p align="center">
-  <img src="./docs/media/banner.svg" alt="Quell — your production's autonomous on-call" width="100%"/>
+  <img src="./docs/media/banner.svg" alt="Quell — an on-call engineer that never sleeps" width="100%"/>
 </p>
 
 <p align="center">

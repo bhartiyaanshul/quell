@@ -141,7 +141,7 @@ def run_init(project_dir: Path | None = None) -> None:
 
 async def _run_init_async(project_dir: Path) -> None:
     """Async implementation of the init wizard."""
-    typer.echo("\n🔧  Welcome to Quell — your production's autonomous on-call.\n")
+    typer.echo("\n🔧  Welcome to Quell — an on-call engineer that never sleeps.\n")
 
     # --- Project summary ---
     project_type = _detect_project_type(project_dir)

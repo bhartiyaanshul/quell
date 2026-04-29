@@ -44,7 +44,7 @@ say()   { printf "  %s\n" "$*"; }
 banner() {
     printf "\n"
     printf "${BOLD}Quell installer${RESET}\n"
-    printf "${DIM}%s${RESET}\n" "Your production's autonomous on-call."
+    printf "${DIM}%s${RESET}\n" "An on-call engineer that never sleeps."
     printf "\n"
 }
 

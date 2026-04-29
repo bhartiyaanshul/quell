@@ -14,7 +14,7 @@ from quell.version import __version__
 
 app = typer.Typer(
     name="quell",
-    help="Your production's autonomous on-call.",
+    help="An on-call engineer that never sleeps.",
     no_args_is_help=False,
 )
 

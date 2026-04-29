@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "quell-agent"
 version = "0.2.0"
-description = "Your production's autonomous on-call."
+description = "An on-call engineer that never sleeps."
 authors = ["Anshul Bhartiya"]
 license = "Apache-2.0"
 readme = "README.md"
