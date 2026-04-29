@@ -18,6 +18,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://quell.anshulbuilds.xyz"),
   title: "Quell — An on-call engineer that never sleeps",
   description:
     "Open-source multi-agent incident response. Quell watches production, investigates incidents via LLM-backed agents in a Docker sandbox, and produces a structured report for human review — all while you sleep.",
@@ -28,6 +29,14 @@ export const metadata: Metadata = {
     url: "https://quell.anshulbuilds.xyz",
     siteName: "Quell",
     type: "website",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Quell — An on-call engineer that never sleeps",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -35,6 +44,7 @@ export const metadata: Metadata = {
     description:
       "Watch production. Investigate incidents. Draft the fix. All while you sleep.",
     creator: "@Bhartiyaanshul",
+    images: ["/og.png"],
   },
   icons: {
     icon: "/favicon.svg",
