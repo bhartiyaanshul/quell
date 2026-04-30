@@ -175,7 +175,7 @@ Prints the installed version string and exits.
 
 ```
 $ quell version
-quell-agent 0.1.0
+quell 0.2.0
 ```
 
 Useful in bug reports — include this plus `poetry show` / `pip list`

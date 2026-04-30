@@ -5,11 +5,11 @@ whichever your users' environment prefers.
 
 | Channel | Status | User install command | Source |
 |---------|--------|----------------------|--------|
-| **npm** | ⏳ ready (waits for first release) | `npm i -g quell-agent` | [`npm/`](npm/) |
+| **npm** | ⏳ ready (waits for first release) | `npm i -g quell` | [`npm/`](npm/) |
 | **Prebuilt binary** | ⏳ ready (waits for first release) | `curl -sSL https://github.com/bhartiyaanshul/quell/releases/latest/download/quell-$(uname -s)-$(uname -m).tar.gz \| tar xz` | [`pyinstaller/quell.spec`](pyinstaller/quell.spec) |
 | **curl install.sh** | ✅ live | `curl -fsSL https://raw.githubusercontent.com/bhartiyaanshul/quell/main/install.sh \| bash` | [`../install.sh`](../install.sh) |
 | **Homebrew tap** | ⏳ ready (waits for PyPI) | `brew install bhartiyaanshul/quell/quell` | [`homebrew/quell.rb`](homebrew/quell.rb) |
-| **PyPI** | ⏳ wired in `release.yml` (waits for first tag) | `pipx install quell-agent` | `.github/workflows/release.yml` |
+| **PyPI** | ⏳ wired in `release.yml` (waits for first tag) | `pipx install quell` | `.github/workflows/release.yml` |
 | **Docker sandbox** | ⏳ manual push in Phase 16 | `docker pull ghcr.io/bhartiyaanshul/quell-sandbox` | — |
 
 "Ready" means the recipe is committed; "live" means users can run it
@@ -32,8 +32,8 @@ tag is pushed and `release.yml` + `build-binaries.yml` run.
      release)       attached to gh release)    publish npm wrapper
            │              │                              │
            ▼              ▼                              ▼
-  pipx install   curl | tar xz                 npm i -g quell-agent
-  quell-agent    prebuilt binary               (postinstall fetches
+  pipx install   curl | tar xz                 npm i -g quell
+  quell    prebuilt binary               (postinstall fetches
                  on user's PATH                 the same binary)
 ```
 
@@ -89,11 +89,11 @@ cd packaging/npm
 npm publish --access public    # after bumping "version" to match the tag
 ```
 
-Publishes to [`npmjs.com/package/quell-agent`](https://www.npmjs.com/package/quell-agent).
+Publishes to [`npmjs.com/package/quell`](https://www.npmjs.com/package/quell).
 Users then install with:
 
 ```bash
-npm i -g quell-agent
+npm i -g quell
 ```
 
 ### `homebrew/quell.rb` (Homebrew tap)
@@ -121,8 +121,8 @@ Already wired.  On `v*` tag push:
 Users then install with:
 
 ```bash
-pipx install quell-agent       # recommended, isolated
-pip  install --user quell-agent  # alternative, if pipx isn't available
+pipx install quell       # recommended, isolated
+pip  install --user quell  # alternative, if pipx isn't available
 ```
 
 ### Docker sandbox image

@@ -8,6 +8,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing yet.
 
+## [0.2.1] — 2026-04-30
+
+Patch release. Fixes a `quell init` regression on Windows.
+
+### Fixed
+
+- **`quell init` wrote invalid TOML on Windows.** The wizard's
+  hand-rolled config writer emitted strings unescaped, so a Windows
+  `repo_path` like `C:\Users\you` produced `repo_path = "C:\Users\you"`
+  — TOML reads `\U` as the start of an 8-hex-digit Unicode escape and
+  rejected the file with `Invalid hex value`. The same writer also
+  stringified `[[monitors]]`/`[[notifiers]]` lists via Python's
+  `repr` instead of TOML's array-of-tables syntax. The serializer
+  has been extracted into `quell/utils/toml_writer.py`, picks TOML
+  literal strings (`'...'`) when safe and basic strings with full
+  escaping otherwise, and emits arrays-of-tables correctly. Round-trip
+  tests through `tomllib` cover the regression.
+- If you hit this bug on 0.2.0, re-run `quell init` after upgrading
+  to overwrite the broken file (or delete `.quell/config.toml`
+  manually first).
+
 ## [0.2.0] — 2026-04-23
 
 Theme: **observability + integration**.  You can now *see* what Quell

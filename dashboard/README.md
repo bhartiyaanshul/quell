@@ -30,7 +30,7 @@ cp -r out ../quell/dashboard/static
 
 `out/` is gitignored; the release workflow runs those steps and
 bundles `quell/dashboard/static/` into the wheel so `pipx install
-quell-agent` users get the UI for free.
+quell` users get the UI for free.
 
 ## What it shows
 

@@ -15,7 +15,9 @@ from typing import Any
 import questionary
 import typer
 
+from quell.interface.output import Output
 from quell.utils.keyring_utils import set_secret
+from quell.utils.toml_writer import dumps as toml_dumps
 
 # ---------------------------------------------------------------------------
 # Project detection helpers
@@ -84,45 +86,12 @@ def _ensure_gitignore(path: Path) -> None:
 
 
 def _write_config_toml(path: Path, data: dict[str, Any]) -> None:
-    """Write *data* to .quell/config.toml using basic TOML serialisation."""
+    """Write *data* to ``<path>/.quell/config.toml`` as valid TOML."""
     quell_dir = path / ".quell"
     quell_dir.mkdir(exist_ok=True)
     config_file = quell_dir / "config.toml"
-
-    lines: list[str] = ["# Quell configuration — managed by `quell init`\n"]
-
-    def _write_table(prefix: str, obj: dict[str, Any]) -> list[str]:
-        """Recursively serialise a dict as TOML sections."""
-        result: list[str] = []
-        scalars: list[tuple[str, Any]] = []
-        tables: list[tuple[str, dict[str, Any]]] = []
-
-        for k, v in obj.items():
-            if isinstance(v, dict):
-                tables.append((k, v))
-            else:
-                scalars.append((k, v))
-
-        for k, v in scalars:
-            if isinstance(v, str):
-                result.append(f'{k} = "{v}"\n')
-            elif isinstance(v, bool):
-                result.append(f"{k} = {'true' if v else 'false'}\n")
-            elif isinstance(v, int | float):
-                result.append(f"{k} = {v}\n")
-            elif isinstance(v, list):
-                items = ", ".join(f'"{x}"' if isinstance(x, str) else str(x) for x in v)
-                result.append(f"{k} = [{items}]\n")
-
-        for k, v in tables:
-            section = f"{prefix}.{k}" if prefix else k
-            result.append(f"\n[{section}]\n")
-            result.extend(_write_table(section, v))
-
-        return result
-
-    lines.extend(_write_table("", data))
-    config_file.write_text("".join(lines), encoding="utf-8")
+    rendered = toml_dumps(data, header="Quell configuration — managed by `quell init`")
+    config_file.write_text(rendered, encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -141,15 +110,16 @@ def run_init(project_dir: Path | None = None) -> None:
 
 async def _run_init_async(project_dir: Path) -> None:
     """Async implementation of the init wizard."""
-    typer.echo("\n🔧  Welcome to Quell — an on-call engineer that never sleeps.\n")
+    out = Output()
+    out.line("\n🔧  Welcome to Quell — an on-call engineer that never sleeps.\n")
 
     # --- Project summary ---
     project_type = _detect_project_type(project_dir)
     git_remote = _detect_git_remote(project_dir)
 
-    typer.echo(f"  Project type : {project_type}")
-    typer.echo(f"  Git remote   : {git_remote or '(not detected)'}")
-    typer.echo(f"  Directory    : {project_dir}\n")
+    out.line(f"  Project type : {project_type}")
+    out.line(f"  Git remote   : {git_remote or '(not detected)'}")
+    out.line(f"  Directory    : {project_dir}\n")
 
     # --- Monitor selection ---
     monitor_type: str = await asyncio.get_event_loop().run_in_executor(
@@ -170,7 +140,7 @@ async def _run_init_async(project_dir: Path) -> None:
     )
 
     if monitor_type is None:
-        typer.echo("Init cancelled.")
+        out.line("Init cancelled.")
         raise typer.Exit(0)
 
     monitor_config: dict[str, Any] = {"type": monitor_type}
@@ -258,7 +228,7 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         notifier_config = {"type": "discord"}
         set_secret("quell/discord", "webhook_url", webhook_url)
-        typer.echo("  ✓ Discord webhook stored in OS keychain.")
+        out.line("  ✓ Discord webhook stored in OS keychain.")
 
     elif notifier_type == "slack":
         webhook_url = (
@@ -270,7 +240,7 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         notifier_config = {"type": "slack"}
         set_secret("quell/slack", "webhook_url", webhook_url)
-        typer.echo("  ✓ Slack webhook stored in OS keychain.")
+        out.line("  ✓ Slack webhook stored in OS keychain.")
 
     elif notifier_type == "telegram":
         bot_token: str = (
@@ -289,7 +259,7 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         notifier_config = {"type": "telegram", "chat_id": chat_id}
         set_secret("quell/telegram", "bot_token", bot_token)
-        typer.echo("  ✓ Telegram bot token stored in OS keychain.")
+        out.line("  ✓ Telegram bot token stored in OS keychain.")
 
     # --- LLM provider ---
     provider_names = [p["name"] for p in _LLM_PROVIDERS]
@@ -333,7 +303,7 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         if api_key:
             set_secret(f"quell/{provider_info['prefix']}", "api_key", api_key)
-            typer.echo(f"  ✓ {chosen_provider_name} API key stored in OS keychain.")
+            out.line(f"  ✓ {chosen_provider_name} API key stored in OS keychain.")
 
     # --- GitHub token (optional) ---
     github_token: str = (
@@ -347,7 +317,7 @@ async def _run_init_async(project_dir: Path) -> None:
     )
     if github_token:
         set_secret("quell/github", "token", github_token)
-        typer.echo("  ✓ GitHub token stored in OS keychain.")
+        out.line("  ✓ GitHub token stored in OS keychain.")
 
     # --- Build and write config ---
     config_data: dict[str, Any] = {
@@ -361,9 +331,9 @@ async def _run_init_async(project_dir: Path) -> None:
     _write_config_toml(project_dir, config_data)
     _ensure_gitignore(project_dir)
 
-    typer.echo(f"\n✅  Config written to {project_dir / '.quell' / 'config.toml'}")
-    typer.echo("   .quell/ added to .gitignore")
-    typer.echo("\nRun `quell doctor` to verify your setup.\n")
+    out.line(f"\n✅  Config written to {project_dir / '.quell' / 'config.toml'}")
+    out.line("   .quell/ added to .gitignore")
+    out.line("\nRun `quell doctor` to verify your setup.\n")
 
 
 __all__ = ["run_init"]

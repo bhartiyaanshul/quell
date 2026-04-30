@@ -104,7 +104,7 @@ def test_stats_prints_aggregate(seeded_db: tuple[Path, list[str]]) -> None:
 def test_version_command_prints_version() -> None:
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
-    assert "quell-agent" in result.stdout
+    assert result.stdout.startswith("quell ")
 
 
 # Keep an import reference so mypy / ruff don't complain about the unused

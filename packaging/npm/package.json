@@ -1,5 +1,5 @@
 {
-  "name": "quell-agent",
+  "name": "quell",
   "version": "0.2.0",
   "description": "An on-call engineer that never sleeps — open-source multi-agent incident response.",
   "keywords": [

@@ -1,10 +1,10 @@
-# `quell-agent` on npm
+# `quell` on npm
 
 Thin wrapper that installs the native Quell binary on `npm install` so
 that JS-oriented developers can install without ever touching Python:
 
 ```bash
-npm i -g quell-agent
+npm i -g quell
 quell --help
 ```
 
@@ -33,6 +33,6 @@ No Python, no pipx, no venv on the user's machine.
 
 - **"Unsupported platform"** — we currently ship macOS (arm64, x64),
   Linux (x64), and Windows (x64).  Other platforms can install via
-  `pipx install quell-agent` or the curl-pipe installer.
+  `pipx install quell` or the curl-pipe installer.
 - **"Binary not found" at runtime** — the postinstall failed.  Re-run
-  `npm install -g quell-agent` with `--loglevel=verbose` to see why.
+  `npm install -g quell` with `--loglevel=verbose` to see why.
