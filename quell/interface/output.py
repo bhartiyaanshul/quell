@@ -247,11 +247,23 @@ class Output:
         """Raw line — markup not interpreted. Drop-in for ``typer.echo``.
 
         Subject to quiet/json suppression. For themed text, use
-        ``info`` / ``success`` / ``warn`` / ``header`` instead.
+        ``info`` / ``success`` / ``warn`` / ``header`` instead. For
+        text containing inline markup (badges etc.), use ``styled``.
         """
         if self._silenced:
             return
         self._stdout.print(text, markup=False, highlight=False)
+
+    def styled(self, text: str) -> None:
+        """Line with Rich markup interpreted — mixes inline styles.
+
+        Use when emitting strings that contain ``[style]...[/style]``
+        markup (e.g. table rows that include ``badge()`` output).
+        Suppressed under quiet/json like the other render methods.
+        """
+        if self._silenced:
+            return
+        self._stdout.print(text, highlight=False)
 
     # ------------------------------------------------------------------
     # JSON method (only emits in --json mode)

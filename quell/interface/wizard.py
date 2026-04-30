@@ -16,6 +16,7 @@ import questionary
 import typer
 
 from quell.interface.output import Output
+from quell.interface.visuals import next_step, step_indicator, welcome_panel
 from quell.utils.keyring_utils import set_secret
 from quell.utils.toml_writer import dumps as toml_dumps
 
@@ -111,17 +112,29 @@ def run_init(project_dir: Path | None = None) -> None:
 async def _run_init_async(project_dir: Path) -> None:
     """Async implementation of the init wizard."""
     out = Output()
-    out.line("\n🔧  Welcome to Quell — an on-call engineer that never sleeps.\n")
+    welcome_panel(
+        out,
+        title="Quell",
+        body=(
+            "an on-call engineer that never sleeps.\n\nSetup takes about 90 seconds."
+        ),
+    )
 
-    # --- Project summary ---
+    # --- [1/5] Project summary ---
     project_type = _detect_project_type(project_dir)
     git_remote = _detect_git_remote(project_dir)
 
-    out.line(f"  Project type : {project_type}")
-    out.line(f"  Git remote   : {git_remote or '(not detected)'}")
-    out.line(f"  Directory    : {project_dir}\n")
+    step_indicator(out, 1, 5, f"Project type: {project_type}")
+    out.key_value(
+        [
+            ("Git remote", git_remote or "(not detected)"),
+            ("Directory", str(project_dir)),
+        ]
+    )
+    out.line("")
 
-    # --- Monitor selection ---
+    # --- [2/5] Monitor selection ---
+    step_indicator(out, 2, 5, "Log source")
     monitor_type: str = await asyncio.get_event_loop().run_in_executor(
         None,
         lambda: questionary.select(
@@ -199,7 +212,8 @@ async def _run_init_async(project_dir: Path) -> None:
         monitor_config["organization_slug"] = org_slug
         monitor_config["project_slug"] = proj_slug
 
-    # --- Notifier selection ---
+    # --- [3/5] Notifier selection ---
+    step_indicator(out, 3, 5, "Notifications")
     notifier_type: str = (
         await asyncio.get_event_loop().run_in_executor(
             None,
@@ -228,7 +242,7 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         notifier_config = {"type": "discord"}
         set_secret("quell/discord", "webhook_url", webhook_url)
-        out.line("  ✓ Discord webhook stored in OS keychain.")
+        out.success("Discord webhook stored in OS keychain.")
 
     elif notifier_type == "slack":
         webhook_url = (
@@ -240,7 +254,7 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         notifier_config = {"type": "slack"}
         set_secret("quell/slack", "webhook_url", webhook_url)
-        out.line("  ✓ Slack webhook stored in OS keychain.")
+        out.success("Slack webhook stored in OS keychain.")
 
     elif notifier_type == "telegram":
         bot_token: str = (
@@ -259,9 +273,10 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         notifier_config = {"type": "telegram", "chat_id": chat_id}
         set_secret("quell/telegram", "bot_token", bot_token)
-        out.line("  ✓ Telegram bot token stored in OS keychain.")
+        out.success("Telegram bot token stored in OS keychain.")
 
-    # --- LLM provider ---
+    # --- [4/5] LLM provider ---
+    step_indicator(out, 4, 5, "LLM provider")
     provider_names = [p["name"] for p in _LLM_PROVIDERS]
     chosen_provider_name: str = (
         await asyncio.get_event_loop().run_in_executor(
@@ -303,9 +318,10 @@ async def _run_init_async(project_dir: Path) -> None:
         )
         if api_key:
             set_secret(f"quell/{provider_info['prefix']}", "api_key", api_key)
-            out.line(f"  ✓ {chosen_provider_name} API key stored in OS keychain.")
+            out.success(f"{chosen_provider_name} API key stored in OS keychain.")
 
-    # --- GitHub token (optional) ---
+    # --- [5/5] GitHub token (optional) ---
+    step_indicator(out, 5, 5, "GitHub token (optional, for draft PRs)")
     github_token: str = (
         await asyncio.get_event_loop().run_in_executor(
             None,
@@ -317,7 +333,7 @@ async def _run_init_async(project_dir: Path) -> None:
     )
     if github_token:
         set_secret("quell/github", "token", github_token)
-        out.line("  ✓ GitHub token stored in OS keychain.")
+        out.success("GitHub token stored in OS keychain.")
 
     # --- Build and write config ---
     config_data: dict[str, Any] = {
@@ -331,9 +347,12 @@ async def _run_init_async(project_dir: Path) -> None:
     _write_config_toml(project_dir, config_data)
     _ensure_gitignore(project_dir)
 
-    out.line(f"\n✅  Config written to {project_dir / '.quell' / 'config.toml'}")
-    out.line("   .quell/ added to .gitignore")
-    out.line("\nRun `quell doctor` to verify your setup.\n")
+    out.line("")
+    out.success(f"Config written to {project_dir / '.quell' / 'config.toml'}")
+    out.success(".quell/ added to .gitignore")
+    out.line("")
+    next_step(out, "Verify your setup", command="quell doctor")
+    out.line("")
 
 
 __all__ = ["run_init"]
