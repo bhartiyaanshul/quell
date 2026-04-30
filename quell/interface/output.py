@@ -34,12 +34,12 @@ from quell.interface.output_schemas import (
 # across web and terminal. See docs/cli-design.md §9.1.
 _THEME: Theme = Theme(
     {
-        "accent": "#fb923c",   # primary orange
+        "accent": "#fb923c",  # primary orange
         "success": "#22c55e",  # green
         "warning": "#fcd34d",  # amber
-        "error": "#ef4444",    # red
-        "info": "#94a3b8",     # blue-gray (secondary text)
-        "muted": "#64748b",    # dim gray (metadata, separators)
+        "error": "#ef4444",  # red
+        "info": "#94a3b8",  # blue-gray (secondary text)
+        "muted": "#64748b",  # dim gray (metadata, separators)
     }
 )
 
