@@ -18,6 +18,7 @@ from typing import Annotated
 
 import typer
 
+from quell.interface.config_cmd import config_app
 from quell.interface.incident_cmd import incident_app
 from quell.interface.incident_handlers import (
     list_handler,
@@ -29,9 +30,9 @@ from quell.interface.main import app
 from quell.interface.output import Output
 from quell.version import __version__
 
-# Resource sub-apps. Phase 3 adds one per resource; Phases 3.2–3.4 will
-# follow with config / skill / notifier.
+# Resource sub-apps. Phases 3.3–3.4 will add skill / notifier.
 app.add_typer(incident_app, name="incident")
+app.add_typer(config_app, name="config")
 
 
 def _emit_deprecation(old: str, new: str) -> None:
