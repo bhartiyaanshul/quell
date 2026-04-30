@@ -218,9 +218,45 @@ def doctor(
         raise typer.Exit(code=1)
 
 
+@app.command(name="explain")
+def explain_cmd(
+    command: Annotated[
+        list[str] | None,
+        typer.Argument(
+            help="Command path to explain, e.g. 'incident list'. Omit for root.",
+        ),
+    ] = None,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
+) -> None:
+    """Verbose, agent-friendly docs for a single command or resource.
+
+    Where `--help` is terse and `--help-json` is machine output,
+    `explain` is the long-form variant: prints every flag with type
+    and default, every documented example, and a closing reminder of
+    the universal flag set. Designed for agents that need to use a
+    command correctly on the first try.
+
+    Examples:
+      quell explain                       # root command tree
+      quell explain incident list         # one verb in detail
+      quell explain config                # whole sub-app
+    """
+    from quell.interface.explain import explain
+
+    out = build_output(no_color=no_color)
+    safe_run(out, lambda: explain(out, command or []))
+
+
 @app.command(name="version")
 def show_version() -> None:
-    """Print the installed Quell version and exit."""
+    """Print the installed Quell version and exit.
+
+    Examples:
+      quell version
+      quell --version    # canonical alias
+    """
     Output().line(f"quell {__version__}")
 
 
@@ -248,6 +284,11 @@ def watch(
     ``--quiet`` / ``--no-color`` for now (a JSONL stream is on the
     Phase 4 roadmap). The flags currently scope to the wrapper-level
     ``interrupted`` notice the CLI emits on Ctrl-C.
+
+    Examples:
+      quell watch                              # use cwd
+      quell watch --path ~/projects/myapp      # different project
+      quell watch 2>&1 | tee quell.log         # capture loguru output
     """
     from quell.config.loader import load_config
     from quell.watch import watch as run_watch
@@ -287,6 +328,11 @@ def dashboard(
     The dashboard is a Next.js app — its own logging is unaffected by
     ``--quiet`` / ``--no-color``. The flags currently scope to the
     wrapper-level ``interrupted`` notice on Ctrl-C.
+
+    Examples:
+      quell dashboard                          # http://localhost:7777
+      quell dashboard --port 8080 --no-open    # custom port, no browser
+      quell dashboard --host 0.0.0.0           # bind on every interface
     """
     from quell.dashboard.launcher import run_dashboard_sync
 
