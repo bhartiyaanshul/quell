@@ -231,9 +231,7 @@ async def _run_all_checks(
         results = await asyncio.gather(*coros)
         return list(results)
 
-    tasks: list[asyncio.Task[CheckResult]] = [
-        asyncio.create_task(c) for c in coros
-    ]
+    tasks: list[asyncio.Task[CheckResult]] = [asyncio.create_task(c) for c in coros]
     pending = set(tasks)
     while pending:
         done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
