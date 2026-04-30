@@ -268,3 +268,61 @@ async def test_check_single_install_fails_with_multiple(
     assert result.ok is False
     assert "2" in result.detail
     assert "pip uninstall" in result.detail
+
+
+# ---------------------------------------------------------------------------
+# check_pypi_freshness (Phase 6.4)
+# ---------------------------------------------------------------------------
+
+
+async def test_check_pypi_freshness_passes_when_at_latest() -> None:
+    """Installed version equals PyPI's latest — pass."""
+    from quell.interface.doctor import check_pypi_freshness
+    from quell.version import __version__
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"info": {"version": __version__}}
+
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client_class.return_value = mock_client
+        result = await check_pypi_freshness()
+
+    assert result.ok is True
+    assert "latest" in result.detail.lower()
+
+
+async def test_check_pypi_freshness_fails_when_older() -> None:
+    """Installed version older than PyPI — fail with corrective hint."""
+    from quell.interface.doctor import check_pypi_freshness
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"info": {"version": "999.0.0"}}
+
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client_class.return_value = mock_client
+        result = await check_pypi_freshness()
+
+    assert result.ok is False
+    assert "999.0.0" in result.detail
+    assert "pipx upgrade" in result.detail
+
+
+async def test_check_pypi_freshness_skips_on_network_error() -> None:
+    """Network errors don't fail the check — non-fatal."""
+    from quell.interface.doctor import check_pypi_freshness
+
+    with patch("httpx.AsyncClient", side_effect=ConnectionError("offline")):
+        result = await check_pypi_freshness()
+
+    assert result.ok is True
+    assert "Skipped" in result.detail

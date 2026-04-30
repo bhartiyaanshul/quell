@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 import httpx
+from packaging.version import InvalidVersion, Version
 from pydantic import BaseModel
 
 from quell.interface.output import Output
@@ -25,6 +26,7 @@ from quell.interface.progress import progress
 from quell.utils.errors import ConfigError
 from quell.utils.keyring_utils import get_secret
 from quell.utils.shell import command_exists, run_command
+from quell.version import __version__
 
 
 def _find_quell_binaries() -> list[Path]:
@@ -229,6 +231,57 @@ async def check_llm(project_dir: Path) -> CheckResult:
         return CheckResult(name="LLM reachable", ok=False, detail=str(exc))
 
 
+async def check_pypi_freshness() -> CheckResult:
+    """Check if a newer Quell is available on PyPI (Phase 6.4).
+
+    Returns ``ok`` when the installed version matches or exceeds the
+    PyPI release, or when PyPI is unreachable (this isn't worth failing
+    ``doctor`` over — networks come and go). Returns ``fail`` only on a
+    confirmed older install, with the corrective ``pipx upgrade`` baked
+    into the detail string.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get("https://pypi.org/pypi/quell/json")
+        if resp.status_code != 200:
+            return CheckResult(
+                name="PyPI freshness",
+                ok=True,
+                detail=f"Skipped — PyPI returned HTTP {resp.status_code}",
+            )
+        latest = str(resp.json()["info"]["version"])
+    except Exception as exc:  # noqa: BLE001 — network errors are non-fatal
+        return CheckResult(
+            name="PyPI freshness",
+            ok=True,
+            detail=f"Skipped — {exc}",
+        )
+
+    try:
+        is_outdated = Version(__version__) < Version(latest)
+    except InvalidVersion:
+        return CheckResult(
+            name="PyPI freshness",
+            ok=True,
+            detail=f"Skipped — could not parse version {latest!r}",
+        )
+
+    if is_outdated:
+        return CheckResult(
+            name="PyPI freshness",
+            ok=False,
+            detail=(
+                f"Installed {__version__}, latest is {latest} — "
+                "run `pipx upgrade quell` (or `pip install --upgrade quell`)"
+            ),
+        )
+    return CheckResult(
+        name="PyPI freshness",
+        ok=True,
+        detail=f"{__version__} (latest on PyPI)",
+    )
+
+
 async def check_github_token() -> CheckResult:
     token = get_secret("quell/github", "token")
     if not token:
@@ -282,6 +335,7 @@ async def _run_all_checks(
         check_git(),
         check_docker(),
         check_single_install(),
+        check_pypi_freshness(),
         check_config(project_dir),
         check_llm(project_dir),
         check_github_token(),
@@ -313,7 +367,7 @@ def _run_with_progress(output: Output, project_dir: Path) -> list[CheckResult]:
     if not output.supports_animation:
         return asyncio.run(_run_all_checks(project_dir))
 
-    with progress(output, "Running checks", total=7) as tracker:
+    with progress(output, "Running checks", total=8) as tracker:
         return asyncio.run(_run_all_checks(project_dir, tracker=tracker))
 
 
