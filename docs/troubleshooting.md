@@ -45,7 +45,7 @@ pyenv install 3.12.12
 pyenv global 3.12.12
 
 python3.12 --version                    # confirm
-pipx reinstall quell-agent --python python3.12
+pipx reinstall quell --python python3.12
 ```
 
 ---

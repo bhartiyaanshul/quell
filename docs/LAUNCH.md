@@ -7,7 +7,7 @@ community actions.  This doc is the runbook.
 ## Pre-launch — verify the package is shippable
 
 - [ ] `poetry run quell --help` works cleanly from a fresh
-      `pipx install quell-agent`.
+      `pipx install quell`.
 - [ ] `quell init` wizard runs end-to-end on **macOS**, **Linux**, and
       **Windows**.  (Use a VM or CI matrix — do not skip any OS.)
 - [ ] `quell doctor` passes with a real API key configured.
@@ -40,7 +40,7 @@ community actions.  This doc is the runbook.
 
 - [ ] Cut the `v0.1.0` git tag; CI publishes to PyPI and creates the
       GitHub release.
-- [ ] Verify `pipx install quell-agent==0.1.0` on a clean machine.
+- [ ] Verify `pipx install quell==0.2.0` on a clean machine.
 - [ ] Submit HN post: **"Show HN: Quell — open-source autonomous on-call
       engineer"**.  Time around 9am PT Tuesday through Thursday.
 - [ ] X announcement thread with the demo video embedded.

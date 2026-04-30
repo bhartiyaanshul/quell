@@ -129,7 +129,7 @@ install_with_pm() {
 banner
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-if [ ! -f "$REPO_ROOT/pyproject.toml" ] || ! grep -q '^name = "quell-agent"' "$REPO_ROOT/pyproject.toml"; then
+if [ ! -f "$REPO_ROOT/pyproject.toml" ] || ! grep -q '^name = "quell"' "$REPO_ROOT/pyproject.toml"; then
     err "scripts/install.sh must be run from inside the Quell repo."
     err "Current REPO_ROOT=$REPO_ROOT does not look like the Quell checkout."
     exit 1
@@ -249,7 +249,7 @@ fi
 
 step "Installing Quell via pipx"
 
-if pipx list --short 2>/dev/null | grep -q '^quell-agent '; then
+if pipx list --short 2>/dev/null | grep -q '^quell '; then
     say "Existing installation found — upgrading with --force."
     pipx install --force --python "$PYTHON" "$REPO_ROOT"
 else
@@ -274,8 +274,8 @@ if [ ! -x "$QUELL_BIN" ]; then
 fi
 
 VERSION_OUTPUT="$("$QUELL_BIN" --version 2>&1 || true)"
-if [[ "$VERSION_OUTPUT" != *"quell-agent"* ]]; then
-    err "Installed binary did not return a quell-agent version string."
+if [[ "$VERSION_OUTPUT" != "quell "* ]]; then
+    err "Installed binary did not return a quell version string."
     err "Got: $VERSION_OUTPUT"
     exit 1
 fi

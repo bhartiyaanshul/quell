@@ -110,7 +110,7 @@ Any POSIX shell. Probes for a prebuilt binary first, falls back to pipx + source
 ### npm
 
 ```bash
-npm i -g quell-agent
+npm i -g quell
 ```
 
 For JavaScript-oriented developers. The postinstall hook downloads the native binary, so nothing on the Python side is needed.
@@ -126,7 +126,7 @@ For macOS and Linux brew users. Installs into `/opt/homebrew/bin` (Apple silicon
 ### pipx
 
 ```bash
-pipx install quell-agent
+pipx install quell
 ```
 
 For Python users who already have pipx. Creates an isolated venv under `~/.local`.

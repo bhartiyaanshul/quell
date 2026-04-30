@@ -12,6 +12,11 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      # Required for PyPI Trusted Publishing (OIDC).
+      id-token: write
+      # Required for softprops/action-gh-release to create the GitHub release.
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
@@ -61,10 +66,10 @@ jobs:
       - name: Build distribution artifacts
         run: poetry build
 
-      - name: Publish to PyPI
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-        run: poetry publish --no-interaction
+      - name: Publish to PyPI (Trusted Publishing / OIDC)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2

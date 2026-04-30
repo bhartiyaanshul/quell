@@ -36,7 +36,7 @@ which quell                # → ~/.local/bin/quell
 After Quell is published to PyPI the last step becomes:
 
 ```bash
-pipx install quell-agent
+pipx install quell
 ```
 
 ### Upgrading
@@ -50,13 +50,13 @@ pipx install /Users/you/path/to/quell --force
 From PyPI (after publish):
 
 ```bash
-pipx upgrade quell-agent
+pipx upgrade quell
 ```
 
 ### Uninstalling
 
 ```bash
-pipx uninstall quell-agent
+pipx uninstall quell
 ```
 
 ---

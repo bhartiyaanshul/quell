@@ -30,7 +30,7 @@ const binaryPath = path.join(
 if (!fs.existsSync(binaryPath)) {
   console.error(
     `Quell binary not found at ${binaryPath}.\n` +
-      'Re-run `npm install -g quell-agent` to fetch it, or install via ' +
+      'Re-run `npm install -g quell` to fetch it, or install via ' +
       'curl:\n\n' +
       '  curl -fsSL https://raw.githubusercontent.com/bhartiyaanshul/quell/main/install.sh | bash\n',
   );
