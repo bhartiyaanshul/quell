@@ -8,6 +8,148 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing yet.
 
+## [0.3.0] — 2026-05-01
+
+Theme: **agent-friendly CLI**. The 0.2 flat-verb surface (`quell history`,
+`quell show`, `quell stats`, `quell test-notifier`) is replaced by the
+v0.3 `resource verb` grammar: every command is now discoverable from
+`--help` alone, every command speaks `--json` for tool integration, and
+exit codes carry meaning. Old commands keep working as deprecated aliases
+that emit a one-line stderr warning — they will be removed in 0.4.0.
+
+See [`docs/migrating-to-0.3.md`](docs/migrating-to-0.3.md) for the full
+upgrade path.
+
+### Breaking changes
+
+- **Exit codes are now stable + meaningful** (see `docs/cli-design.md` §6).
+  `0` success, `2` usage error, `3` config error, `4` external service,
+  `5` sandbox, `6` auth, `7` not-found, `8` already-exists. Scripts that
+  checked `exit_code != 0` keep working; scripts that grep for exact
+  codes need updating. Most notably, `quell incident show <missing-id>`
+  now exits `7` (was `1`).
+- **`quell history`, `quell show <id>`, `quell stats`, `quell replay <id>`,
+  `quell test-notifier <channel>`** still run but print
+  `[deprecation] '<old>' is deprecated; use '<new>' instead. (will be
+  removed in v0.4.0)` to stderr. Migrate to the resource-verb form to
+  silence the warning.
+
+### Added — v0.3 command surface
+
+- **`quell incident list / show / stats / replay`** — replaces the four
+  v0.2 top-level history/show/stats/replay verbs. `list` accepts
+  `--status`, `--severity`, `--since "1 week ago"`, `--limit`. Emits
+  `incident.list` / `incident.show` / `incident.stats` /
+  `incident.replay` JSON envelopes under `--json`.
+- **`quell config show / get / set / validate / edit`** — read & mutate
+  `.quell/config.toml` with type-checked dotted keys. `set` is
+  destructive — requires `--yes` or interactive confirmation, supports
+  `--dry-run`. Refuses to write `llm.api_key` (lives in the keychain).
+  `edit` opens `$EDITOR` and revalidates on save.
+- **`quell skill list / show / enable / disable`** — list bundled
+  runbooks and toggle whether the watch loop auto-loads each. Disabled
+  state persists in `.quell/config.toml` under `[skills] disabled`.
+- **`quell notifier list / test / add / remove`** — manage notifier
+  entries in `.quell/config.toml`. `add` and `remove` are destructive
+  (`--yes` / `--dry-run`); `add` of an already-configured channel
+  exits `8` (`AlreadyExists`); `remove` is idempotent (exits `0` with
+  `removed=false` when there's nothing to do).
+- **`quell explain <command>`** — long-form, agent-friendly docs for
+  any command or sub-app. Lists every flag with type and default,
+  inlines the `Examples:` block, closes with the universal flag set.
+- **`quell --help-json`** — emits the full Click introspection tree as
+  a `help.tree` JSON envelope. Designed for editor plugins and agents.
+
+### Added — universal flag set
+
+Every command (resource verbs and global verbs) now accepts:
+
+- `--json` — machine-readable output. Disables animations, colors,
+  prompts. Errors → stderr as `error.v1` JSON.
+- `--quiet` / `-q` — suppress non-error output (exit code is the signal).
+- `--no-color` — disable ANSI colors. Auto-on under `NO_COLOR=1` or
+  non-TTY.
+- `--yes` / `-y` — skip confirmation prompts on destructive verbs.
+- `--dry-run` — preview without writing on destructive verbs.
+- `--path PATH` — project directory to operate on (defaults to cwd).
+
+Plus a new env var: **`QUELL_NO_ANIM=1`** disables spinners + progress
+bars regardless of TTY state.
+
+### Added — `quell init --yes`
+
+Non-interactive init for CI / agents:
+
+```bash
+quell init --yes --monitor local-file --log-path /var/log/app.log \
+                 --llm-provider anthropic
+```
+
+Reads `$QUELL_<PROVIDER>_API_KEY` / `$QUELL_<NOTIFIER>_WEBHOOK_URL` /
+`$QUELL_TELEGRAM_BOT_TOKEN` / `$QUELL_GITHUB_TOKEN` for secrets and
+persists them to the OS keychain. The structural part of the config is
+written either way; missing secrets surface as a final warning.
+
+### Added — `quell doctor` improvements
+
+- **`--json`** emits a `doctor.run` envelope with a stable
+  `{name, status, detail}` per check plus aggregate `passed` / `failed`
+  counts.
+- **`--quiet`** suppresses the table; the exit code is the signal
+  (`quell doctor --quiet || exit 1`).
+- **`Single install` check** flags multiple `quell` binaries on PATH
+  with the corrective `pip uninstall -y quell` baked into the detail
+  string.
+- **`PyPI freshness` check** hits `pypi.org/pypi/quell/json` and
+  suggests `pipx upgrade quell` when outdated. Network errors and
+  unparseable versions both pass — `doctor` doesn't go red because
+  PyPI was slow.
+- **Per-check progress bar** during `quell doctor` in interactive
+  mode (Quell-orange braille pulse spinner, advances per
+  `asyncio.wait` completion). Silenced under `--json` / `--quiet` /
+  non-TTY / `QUELL_NO_ANIM`.
+
+### Added — visual polish
+
+- **Quell-branded spinner shape** registered with Rich (12-frame
+  braille pulse, accent orange).
+- **Progress bar API** (`quell.interface.progress.progress`) for
+  known-length operations — Rich bar under animation, single trailing
+  summary line otherwise.
+- **First-run welcome panel** (`quell init` shows a rounded panel
+  with the brand line on first run).
+
+### Added — `quell --version` shows binary path
+
+`quell --version` and `quell version` both print
+`quell <ver> (<binary path>)`. Resolves through symlinks so pipx /
+brew shims show the real underlying binary — diagnoses
+multiple-install confusion in one command.
+
+### Added — auto-generated CLI reference
+
+`scripts/gen_commands_md.py` walks the live Typer app and emits
+`docs/commands.md`. The committed doc is verified in-tree by a pytest
+test (`test_committed_doc_is_in_sync_with_generator`) so docstring +
+flag drift is caught before review.
+
+### Changed
+
+- Errors raised by every Quell-CLI command are subclasses of
+  `QuellCLIError` and ship with a `fix=` corrective action — the
+  fix is rendered as a "Fix:" block in human mode and as
+  `fix_command` in `--json` mode.
+- `quell` invoked with no arguments now shows a small resource list
+  + four common commands (instead of the verbose Typer dump).
+- `docs/cli-design.md` is the binding spec for the new CLI surface.
+
+### Removed
+
+- The `_` prefix on `_ensure_gitignore` / `_write_config_toml` in
+  `quell.interface.wizard` — promoted to public API
+  (`ensure_gitignore` / `write_config_toml`) so the non-interactive
+  init can reuse them.
+
 ## [0.2.1] — 2026-04-30
 
 Patch release. Fixes a `quell init` regression on Windows.
