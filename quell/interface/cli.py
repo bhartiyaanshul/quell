@@ -69,13 +69,113 @@ def init(
             exists=False,
         ),
     ] = None,
+    yes: Annotated[
+        bool,
+        typer.Option(
+            "--yes",
+            "-y",
+            help="Run non-interactively from flags + $QUELL_* env vars (no prompts).",
+        ),
+    ] = False,
+    monitor: Annotated[
+        str | None,
+        typer.Option(
+            "--monitor",
+            help="Monitor type: local-file, http-poll, vercel, sentry. (--yes only)",
+        ),
+    ] = None,
+    log_path: Annotated[
+        str | None,
+        typer.Option("--log-path", help="Log path for --monitor local-file."),
+    ] = None,
+    http_url: Annotated[
+        str | None,
+        typer.Option("--http-url", help="Health URL for --monitor http-poll."),
+    ] = None,
+    vercel_project_id: Annotated[
+        str | None,
+        typer.Option(
+            "--vercel-project-id", help="Project ID for --monitor vercel (prj_...)."
+        ),
+    ] = None,
+    sentry_org: Annotated[
+        str | None,
+        typer.Option("--sentry-org", help="Org slug for --monitor sentry."),
+    ] = None,
+    sentry_project: Annotated[
+        str | None,
+        typer.Option("--sentry-project", help="Project slug for --monitor sentry."),
+    ] = None,
+    notifier: Annotated[
+        str | None,
+        typer.Option(
+            "--notifier",
+            help="Notifier: discord, slack, telegram, or none. (--yes only)",
+        ),
+    ] = None,
+    telegram_chat_id: Annotated[
+        str | None,
+        typer.Option(
+            "--telegram-chat-id",
+            help="Telegram chat ID (required for --notifier telegram).",
+        ),
+    ] = None,
+    llm_provider: Annotated[
+        str | None,
+        typer.Option(
+            "--llm-provider",
+            help="LLM provider: anthropic, openai, google, or ollama.",
+        ),
+    ] = None,
+    llm_model: Annotated[
+        str | None,
+        typer.Option(
+            "--llm-model",
+            help="Full LiteLLM model string (overrides provider default).",
+        ),
+    ] = None,
+    quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Errors only.")] = False,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
 ) -> None:
-    """Run the interactive setup wizard to configure Quell for a project.
+    """Configure Quell for a project.
 
-    Phase 3.6 will add ``--monitor``, ``--log-path``, ``--llm-provider``
-    etc. so the wizard can be driven non-interactively. For now,
-    ``init`` remains interactive and the universal flags don't apply.
+    Without ``--yes``, runs the interactive wizard (legacy behaviour).
+    With ``--yes``, runs non-interactively from the flags below and
+    ``$QUELL_*`` env vars for secrets — suitable for CI and agents.
+
+    Examples:
+      quell init                                              # interactive
+      quell init --yes                                        # all defaults
+      quell init --yes --monitor local-file --log-path /var/log/app.log \\
+                 --llm-provider anthropic
+      QUELL_ANTHROPIC_API_KEY=sk-... quell init --yes
     """
+    out = Output(quiet=quiet, no_color=no_color or None)
+    if yes:
+        from quell.interface.wizard_noninteractive import run_noninteractive_init
+
+        try:
+            run_noninteractive_init(
+                project_dir=(path or Path.cwd()),
+                out=out,
+                monitor=monitor or "local-file",
+                log_path=log_path,
+                http_url=http_url,
+                vercel_project_id=vercel_project_id,
+                sentry_org=sentry_org,
+                sentry_project=sentry_project,
+                notifier=notifier or "none",
+                telegram_chat_id=telegram_chat_id,
+                llm_provider=llm_provider or "anthropic",
+                llm_model=llm_model,
+            )
+        except QuellCLIError as exc:
+            code = handle_cli_error(exc, out)
+            raise typer.Exit(code=code) from None
+        return
+
     from quell.interface.wizard import run_init
 
     run_init(path)

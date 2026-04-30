@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 from quell.interface.wizard import (
     _detect_git_remote,
     _detect_project_type,
-    _ensure_gitignore,
-    _write_config_toml,
+    ensure_gitignore,
+    write_config_toml,
 )
 
 # ---------------------------------------------------------------------------
@@ -47,28 +47,28 @@ def test_detect_git_remote_no_git(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_ensure_gitignore_creates_new(tmp_path: Path) -> None:
+def testensure_gitignore_creates_new(tmp_path: Path) -> None:
     """Creates .gitignore with .quell/ when none exists."""
-    _ensure_gitignore(tmp_path)
+    ensure_gitignore(tmp_path)
     content = (tmp_path / ".gitignore").read_text()
     assert ".quell/" in content
 
 
-def test_ensure_gitignore_appends_to_existing(tmp_path: Path) -> None:
+def testensure_gitignore_appends_to_existing(tmp_path: Path) -> None:
     """Appends .quell/ to existing .gitignore without duplication."""
     gi = tmp_path / ".gitignore"
     gi.write_text("node_modules/\n", encoding="utf-8")
-    _ensure_gitignore(tmp_path)
+    ensure_gitignore(tmp_path)
     content = gi.read_text()
     assert ".quell/" in content
     assert "node_modules/" in content
 
 
-def test_ensure_gitignore_idempotent(tmp_path: Path) -> None:
+def testensure_gitignore_idempotent(tmp_path: Path) -> None:
     """Does not duplicate .quell/ entry if it already exists."""
     gi = tmp_path / ".gitignore"
     gi.write_text(".quell/\n", encoding="utf-8")
-    _ensure_gitignore(tmp_path)
+    ensure_gitignore(tmp_path)
     content = gi.read_text()
     assert content.count(".quell/") == 1
 
@@ -78,7 +78,7 @@ def test_ensure_gitignore_idempotent(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_write_config_toml_creates_file(tmp_path: Path) -> None:
+def testwrite_config_toml_creates_file(tmp_path: Path) -> None:
     """Writes a valid, parseable .quell/config.toml from a data dict."""
     import tomllib
 
@@ -87,25 +87,25 @@ def test_write_config_toml_creates_file(tmp_path: Path) -> None:
         "llm": {"model": "openai/gpt-4o"},
         "monitors": [{"type": "local-file", "path": "/var/log/app.log"}],
     }
-    _write_config_toml(tmp_path, data)
+    write_config_toml(tmp_path, data)
     config_file = tmp_path / ".quell" / "config.toml"
     assert config_file.exists()
     parsed = tomllib.loads(config_file.read_text(encoding="utf-8"))
     assert parsed == data
 
 
-def test_write_config_toml_creates_quell_dir(tmp_path: Path) -> None:
+def testwrite_config_toml_creates_quell_dir(tmp_path: Path) -> None:
     """Creates .quell/ directory if it does not exist."""
-    _write_config_toml(tmp_path, {"repo_path": "."})
+    write_config_toml(tmp_path, {"repo_path": "."})
     assert (tmp_path / ".quell").is_dir()
 
 
-def test_write_config_toml_handles_windows_path(tmp_path: Path) -> None:
+def testwrite_config_toml_handles_windows_path(tmp_path: Path) -> None:
     """Regression: backslashes in paths must round-trip through tomllib."""
     import tomllib
 
     data = {"repo_path": r"C:\Users\anshul", "llm": {"model": "ollama/llama3"}}
-    _write_config_toml(tmp_path, data)
+    write_config_toml(tmp_path, data)
     parsed = tomllib.loads(
         (tmp_path / ".quell" / "config.toml").read_text(encoding="utf-8")
     )
