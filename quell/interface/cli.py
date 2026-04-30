@@ -19,6 +19,7 @@ from typing import Annotated
 import typer
 
 from quell.interface.config_cmd import config_app
+from quell.interface.errors import QuellCLIError, handle_cli_error
 from quell.interface.incident_cmd import incident_app
 from quell.interface.incident_handlers import (
     list_handler,
@@ -27,14 +28,17 @@ from quell.interface.incident_handlers import (
     stats_handler,
 )
 from quell.interface.main import app
+from quell.interface.notifier_cmd import notifier_app
+from quell.interface.notifier_handlers import test_handler as notifier_test_handler
 from quell.interface.output import Output
 from quell.interface.skill_cmd import skill_app
 from quell.version import __version__
 
-# Resource sub-apps. Phase 3.4 will add notifier.
+# Resource sub-apps for the v0.3 grammar.
 app.add_typer(incident_app, name="incident")
 app.add_typer(config_app, name="config")
 app.add_typer(skill_app, name="skill")
+app.add_typer(notifier_app, name="notifier")
 
 
 def _emit_deprecation(old: str, new: str) -> None:
@@ -160,12 +164,14 @@ def test_notifier(
         ),
     ] = None,
 ) -> None:
-    """Send a synthetic test incident through a configured notifier."""
-    from quell.interface.notifier_test import run_test_notifier
-
-    ok = asyncio.run(run_test_notifier(channel=channel, project_dir=path))
-    if not ok:
-        raise typer.Exit(code=1)
+    """[deprecated] Use ``quell notifier test <channel>`` instead."""
+    _emit_deprecation("quell test-notifier", "quell notifier test")
+    out = Output()
+    try:
+        asyncio.run(notifier_test_handler(out, channel, path))
+    except QuellCLIError as exc:
+        code = handle_cli_error(exc, out)
+        raise typer.Exit(code=code) from None
 
 
 # ---------------------------------------------------------------------------
