@@ -13,6 +13,7 @@ from typing import Annotated
 import typer
 
 from quell.interface.main import app
+from quell.interface.output import Output
 from quell.version import __version__
 
 
@@ -56,7 +57,7 @@ def doctor(
 @app.command(name="version")
 def show_version() -> None:
     """Print the installed Quell version and exit."""
-    typer.echo(f"quell {__version__}")
+    Output().line(f"quell {__version__}")
 
 
 @app.command()
@@ -80,7 +81,7 @@ def watch(
     try:
         asyncio.run(run_watch(config))
     except KeyboardInterrupt:
-        typer.echo("\n(quell watch: interrupted)")
+        Output().info("(quell watch: interrupted)")
 
 
 @app.command()
@@ -148,7 +149,7 @@ def dashboard(
     try:
         run_dashboard_sync(host=host, port=port, open_browser=not no_open)
     except KeyboardInterrupt:
-        typer.echo("\n(quell dashboard: interrupted)")
+        Output().info("(quell dashboard: interrupted)")
 
 
 @app.command(name="test-notifier")

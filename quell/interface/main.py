@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import typer
 
+from quell.interface.output import Output
 from quell.version import __version__
 
 app = typer.Typer(
@@ -22,7 +23,7 @@ app = typer.Typer(
 def _print_version(value: bool) -> None:
     """Typer callback that prints the version and exits when --version is given."""
     if value:
-        typer.echo(f"quell {__version__}")
+        Output().line(f"quell {__version__}")
         raise typer.Exit()
 
 
@@ -43,7 +44,7 @@ def main(
     # don't complain about the unused parameter.
     _ = version
     if ctx.invoked_subcommand is None:
-        typer.echo(f"Quell v{__version__} — run `quell --help` for commands")
+        Output().line(f"Quell v{__version__} — run `quell --help` for commands")
 
 
 # Register subcommands by importing the CLI module.

@@ -244,10 +244,14 @@ class Output:
             self._stdout.print(f"  [muted]{padded}:[/muted]  {value}")
 
     def line(self, text: str = "") -> None:
-        """Raw line — subject to quiet/json suppression."""
+        """Raw line — markup not interpreted. Drop-in for ``typer.echo``.
+
+        Subject to quiet/json suppression. For themed text, use
+        ``info`` / ``success`` / ``warn`` / ``header`` instead.
+        """
         if self._silenced:
             return
-        self._stdout.print(text)
+        self._stdout.print(text, markup=False, highlight=False)
 
     # ------------------------------------------------------------------
     # JSON method (only emits in --json mode)
