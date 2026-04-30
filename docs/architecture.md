@@ -173,16 +173,18 @@ configured.  Inside the sandbox the executor detects
 
 - `quell/interface/cli.py` — Typer entry points for global verbs
   (`init`, `doctor`, `watch`, `dashboard`, `version`) plus deprecated
-  aliases (`history`, `show`, `stats`, `replay`) that forward to the
-  `incident` resource handlers.
-- `quell/interface/wizard.py` — the `quell init` flow.
-- `quell/interface/doctor.py` — the `quell doctor` checks.
-- `quell/interface/incident_cmd.py` — Typer commands for the
-  `incident` resource (`list`, `show`, `stats`, `replay`).
-- `quell/interface/incident_handlers.py` — async handlers that back
-  both the new commands and the deprecated aliases.
-- `quell/interface/incident_schemas.py` — Pydantic schemas for the
-  `incident.*` JSON envelopes.
+  aliases (`history`, `show`, `stats`, `replay`, `test-notifier`)
+  that forward to the resource handlers.
+- `quell/interface/cli_helpers.py` — `build_output` and `safe_run`,
+  shared across every command file (Phase 3.7).
+- `quell/interface/wizard.py` — the interactive `quell init` flow.
+- `quell/interface/wizard_noninteractive.py` — `quell init --yes` flag-
+  driven setup (Phase 3.6); reads `$QUELL_*` env vars for secrets.
+- `quell/interface/doctor.py` — the `quell doctor` checks; emits a
+  `doctor.run` JSON envelope under `--json`.
+- `quell/interface/<resource>_cmd.py` /  `<resource>_handlers.py` /
+  `<resource>_schemas.py` — Phase 3 resource modules. One trio per
+  resource (`incident`, `config`, `skill`, `notifier`).
 - `quell/watch.py` — the main event loop wiring Monitor → Detector →
   IncidentCommander and scheduling investigations as background tasks.
 

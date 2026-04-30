@@ -8,38 +8,24 @@ delegate to :mod:`quell.interface.notifier_handlers`.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from quell.interface.errors import QuellCLIError, handle_cli_error
+from quell.interface.cli_helpers import build_output, safe_run
 from quell.interface.notifier_handlers import (
     add_handler,
     list_handler,
     remove_handler,
     test_handler,
 )
-from quell.interface.output import Output
 
 notifier_app = typer.Typer(
     name="notifier",
     help="Output channels — list, test, add, remove.",
     no_args_is_help=True,
 )
-
-
-def _build_output(json_mode: bool, quiet: bool, no_color: bool) -> Output:
-    return Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
-
-
-def _safe(out: Output, run: Callable[[], None]) -> None:
-    try:
-        run()
-    except QuellCLIError as exc:
-        code = handle_cli_error(exc, out)
-        raise typer.Exit(code=code) from None
 
 
 @notifier_app.command("list")
@@ -62,8 +48,8 @@ def list_cmd(
       quell notifier list
       quell notifier list --json | jq '.data.notifiers[] | select(.secret_configured)'
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: list_handler(out, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: list_handler(out, path))
 
 
 @notifier_app.command("test")
@@ -89,8 +75,8 @@ def test_cmd(
       quell notifier test slack
       quell notifier test discord --json
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: asyncio.run(test_handler(out, channel, path)))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: asyncio.run(test_handler(out, channel, path)))
 
 
 @notifier_app.command("add")
@@ -127,8 +113,8 @@ def add_cmd(
       quell notifier add telegram --chat-id 12345 --yes
       quell notifier add discord --dry-run
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(
         out,
         lambda: add_handler(
             out, channel, chat_id=chat_id, path=path, yes=yes, dry_run=dry_run
@@ -165,8 +151,8 @@ def remove_cmd(
       quell notifier remove slack --yes
       quell notifier remove telegram --dry-run
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(
         out,
         lambda: remove_handler(out, channel, path=path, yes=yes, dry_run=dry_run),
     )

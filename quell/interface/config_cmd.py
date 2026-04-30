@@ -7,12 +7,12 @@ then delegates to the handlers in :mod:`quell.interface.config_handlers`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
+from quell.interface.cli_helpers import build_output, safe_run
 from quell.interface.config_handlers import (
     edit_handler,
     get_handler,
@@ -20,27 +20,12 @@ from quell.interface.config_handlers import (
     show_handler,
     validate_handler,
 )
-from quell.interface.errors import QuellCLIError, handle_cli_error
-from quell.interface.output import Output
 
 config_app = typer.Typer(
     name="config",
     help="Configuration management — show, get, set, validate, edit.",
     no_args_is_help=True,
 )
-
-
-def _build_output(json_mode: bool, quiet: bool, no_color: bool) -> Output:
-    return Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
-
-
-def _safe(out: Output, run: Callable[[], None]) -> None:
-    """Render any ``QuellCLIError`` raised by *run* and exit with its code."""
-    try:
-        run()
-    except QuellCLIError as exc:
-        code = handle_cli_error(exc, out)
-        raise typer.Exit(code=code) from None
 
 
 @config_app.command("show")
@@ -63,8 +48,8 @@ def show_cmd(
       quell config show
       quell config show --json | jq '.data.config.llm.model'
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: show_handler(out, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: show_handler(out, path))
 
 
 @config_app.command("get")
@@ -88,8 +73,8 @@ def get_cmd(
       quell config get llm.model
       quell config get agent.max_iterations --json
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: get_handler(out, key, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: get_handler(out, key, path))
 
 
 @config_app.command("set")
@@ -122,8 +107,8 @@ def set_cmd(
       quell config set llm.model "anthropic/claude-haiku-4-5" --yes
       quell config set agent.max_iterations 100 --dry-run
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(
         out,
         lambda: set_handler(out, key, value, path=path, yes=yes, dry_run=dry_run),
     )
@@ -149,8 +134,8 @@ def validate_cmd(
       quell config validate
       quell config validate --json   # 0 = valid, 3 = invalid
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: validate_handler(out, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: validate_handler(out, path))
 
 
 @config_app.command("edit")
@@ -169,8 +154,8 @@ def edit_cmd(
       quell config edit              # uses $EDITOR (or vi)
       EDITOR=code-w quell config edit
     """
-    out = _build_output(json_mode=False, quiet=False, no_color=no_color)
-    _safe(out, lambda: edit_handler(out, path))
+    out = build_output(no_color=no_color)
+    safe_run(out, lambda: edit_handler(out, path))
 
 
 __all__ = ["config_app"]

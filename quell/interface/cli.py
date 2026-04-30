@@ -18,8 +18,8 @@ from typing import Annotated
 
 import typer
 
+from quell.interface.cli_helpers import build_output, safe_run
 from quell.interface.config_cmd import config_app
-from quell.interface.errors import QuellCLIError, handle_cli_error
 from quell.interface.incident_cmd import incident_app
 from quell.interface.incident_handlers import (
     list_handler,
@@ -152,12 +152,13 @@ def init(
                  --llm-provider anthropic
       QUELL_ANTHROPIC_API_KEY=sk-... quell init --yes
     """
-    out = Output(quiet=quiet, no_color=no_color or None)
+    out = build_output(quiet=quiet, no_color=no_color)
     if yes:
         from quell.interface.wizard_noninteractive import run_noninteractive_init
 
-        try:
-            run_noninteractive_init(
+        safe_run(
+            out,
+            lambda: run_noninteractive_init(
                 project_dir=(path or Path.cwd()),
                 out=out,
                 monitor=monitor or "local-file",
@@ -170,10 +171,8 @@ def init(
                 telegram_chat_id=telegram_chat_id,
                 llm_provider=llm_provider or "anthropic",
                 llm_model=llm_model,
-            )
-        except QuellCLIError as exc:
-            code = handle_cli_error(exc, out)
-            raise typer.Exit(code=code) from None
+            ),
+        )
         return
 
     from quell.interface.wizard import run_init
@@ -213,7 +212,7 @@ def doctor(
     """
     from quell.interface.doctor import run_doctor
 
-    out = Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
     ok = run_doctor(path, out=out)
     if not ok:
         raise typer.Exit(code=1)
@@ -253,7 +252,7 @@ def watch(
     from quell.config.loader import load_config
     from quell.watch import watch as run_watch
 
-    out = Output(quiet=quiet, no_color=no_color or None)
+    out = build_output(quiet=quiet, no_color=no_color)
     config = load_config(local_dir=path, inject_secrets=True)
     try:
         asyncio.run(run_watch(config))
@@ -291,7 +290,7 @@ def dashboard(
     """
     from quell.dashboard.launcher import run_dashboard_sync
 
-    out = Output(quiet=quiet, no_color=no_color or None)
+    out = build_output(quiet=quiet, no_color=no_color)
     try:
         run_dashboard_sync(host=host, port=port, open_browser=not no_open)
     except KeyboardInterrupt:
@@ -317,12 +316,8 @@ def test_notifier(
 ) -> None:
     """[deprecated] Use ``quell notifier test <channel>`` instead."""
     _emit_deprecation("quell test-notifier", "quell notifier test")
-    out = Output()
-    try:
-        asyncio.run(notifier_test_handler(out, channel, path))
-    except QuellCLIError as exc:
-        code = handle_cli_error(exc, out)
-        raise typer.Exit(code=code) from None
+    out = build_output()
+    safe_run(out, lambda: asyncio.run(notifier_test_handler(out, channel, path)))
 
 
 # ---------------------------------------------------------------------------

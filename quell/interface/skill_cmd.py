@@ -7,14 +7,12 @@ delegate to :mod:`quell.interface.skill_handlers`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from quell.interface.errors import QuellCLIError, handle_cli_error
-from quell.interface.output import Output
+from quell.interface.cli_helpers import build_output, safe_run
 from quell.interface.skill_handlers import (
     disable_handler,
     enable_handler,
@@ -27,18 +25,6 @@ skill_app = typer.Typer(
     help="Runbook management — list, show, enable, disable.",
     no_args_is_help=True,
 )
-
-
-def _build_output(json_mode: bool, quiet: bool, no_color: bool) -> Output:
-    return Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
-
-
-def _safe(out: Output, run: Callable[[], None]) -> None:
-    try:
-        run()
-    except QuellCLIError as exc:
-        code = handle_cli_error(exc, out)
-        raise typer.Exit(code=code) from None
 
 
 @skill_app.command("list")
@@ -61,8 +47,8 @@ def list_cmd(
       quell skill list
       quell skill list --json | jq '.data.skills[] | select(.enabled)'
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: list_handler(out, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: list_handler(out, path))
 
 
 @skill_app.command("show")
@@ -86,8 +72,8 @@ def show_cmd(
       quell skill show postgres-deadlock
       quell skill show stripe-webhook-timeout --json
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: show_handler(out, name, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: show_handler(out, name, path))
 
 
 @skill_app.command("enable")
@@ -111,8 +97,8 @@ def enable_cmd(
       quell skill enable postgres-deadlock
       quell skill enable stripe-webhook-timeout --json
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: enable_handler(out, name, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: enable_handler(out, name, path))
 
 
 @skill_app.command("disable")
@@ -136,8 +122,8 @@ def disable_cmd(
       quell skill disable postgres-deadlock
       quell skill disable stripe-webhook-timeout --json
     """
-    out = _build_output(json_mode, quiet, no_color)
-    _safe(out, lambda: disable_handler(out, name, path))
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: disable_handler(out, name, path))
 
 
 __all__ = ["skill_app"]
