@@ -8,10 +8,35 @@ themselves to this ``app`` on import.
 
 from __future__ import annotations
 
+import shutil
+import sys
+from pathlib import Path
+
 import typer
 
 from quell.interface.output import Output
 from quell.version import __version__
+
+
+def _resolve_binary_path() -> str:
+    """Best-effort resolution of the running ``quell`` binary's path.
+
+    Tries ``sys.argv[0]`` first (most accurate when launched via the
+    installed entry point), falls back to ``shutil.which('quell')``,
+    and finally to the literal ``'quell'`` placeholder when nothing
+    resolves. Used by ``--version`` per docs/cli-design.md §4 so users
+    can tell which install is executing — the duplicate-binary issue
+    Phase 6 was originally scoped to address.
+    """
+    argv0 = sys.argv[0] if sys.argv else ""
+    candidate = argv0
+    if not candidate or not Path(candidate).is_file():
+        candidate = shutil.which("quell") or argv0 or "quell"
+    try:
+        return str(Path(candidate).resolve())
+    except OSError:
+        return candidate or "quell"
+
 
 app = typer.Typer(
     name="quell",
@@ -21,9 +46,15 @@ app = typer.Typer(
 
 
 def _print_version(value: bool) -> None:
-    """Typer callback that prints the version and exits when --version is given."""
+    """Typer callback that prints the version and exits when --version is given.
+
+    Per docs/cli-design.md §4 / §6, ``quell --version`` shows both the
+    package version and the resolved binary path so users can spot a
+    multi-install situation (pipx + brew + pip etc.) without running
+    ``which -a quell``.
+    """
     if value:
-        Output().line(f"quell {__version__}")
+        Output().line(f"quell {__version__} ({_resolve_binary_path()})")
         raise typer.Exit()
 
 

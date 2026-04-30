@@ -219,3 +219,110 @@ def test_doctor_quiet_suppresses_output(tmp_path: Path) -> None:
     assert result.stdout.strip() == ""
     # exit_code is 1 if any check failed (likely in CI), else 0 — both are valid.
     assert result.exit_code in (0, 1)
+
+
+# ---------------------------------------------------------------------------
+# check_single_install (Phase 6.1)
+# ---------------------------------------------------------------------------
+
+
+async def test_check_single_install_passes_with_no_quell_on_path(
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    """Running from source / pytest: no `quell` on PATH is a pass."""
+    from quell.interface.doctor import check_single_install
+
+    monkeypatch.setattr("quell.interface.doctor._find_quell_binaries", lambda: [])
+    result = await check_single_install()
+    assert result.ok is True
+
+
+async def test_check_single_install_passes_with_one_binary(
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    from quell.interface.doctor import check_single_install
+
+    monkeypatch.setattr(
+        "quell.interface.doctor._find_quell_binaries",
+        lambda: [Path("/Users/dev/.local/bin/quell")],
+    )
+    result = await check_single_install()
+    assert result.ok is True
+    assert "/Users/dev/.local/bin/quell" in result.detail
+
+
+async def test_check_single_install_fails_with_multiple(
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    """Multiple distinct binaries — flag with the corrective command."""
+    from quell.interface.doctor import check_single_install
+
+    monkeypatch.setattr(
+        "quell.interface.doctor._find_quell_binaries",
+        lambda: [
+            Path("/Users/dev/.local/bin/quell"),
+            Path("/opt/homebrew/bin/quell"),
+        ],
+    )
+    result = await check_single_install()
+    assert result.ok is False
+    assert "2" in result.detail
+    assert "pip uninstall" in result.detail
+
+
+# ---------------------------------------------------------------------------
+# check_pypi_freshness (Phase 6.4)
+# ---------------------------------------------------------------------------
+
+
+async def test_check_pypi_freshness_passes_when_at_latest() -> None:
+    """Installed version equals PyPI's latest — pass."""
+    from quell.interface.doctor import check_pypi_freshness
+    from quell.version import __version__
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"info": {"version": __version__}}
+
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client_class.return_value = mock_client
+        result = await check_pypi_freshness()
+
+    assert result.ok is True
+    assert "latest" in result.detail.lower()
+
+
+async def test_check_pypi_freshness_fails_when_older() -> None:
+    """Installed version older than PyPI — fail with corrective hint."""
+    from quell.interface.doctor import check_pypi_freshness
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"info": {"version": "999.0.0"}}
+
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client_class.return_value = mock_client
+        result = await check_pypi_freshness()
+
+    assert result.ok is False
+    assert "999.0.0" in result.detail
+    assert "pipx upgrade" in result.detail
+
+
+async def test_check_pypi_freshness_skips_on_network_error() -> None:
+    """Network errors don't fail the check — non-fatal."""
+    from quell.interface.doctor import check_pypi_freshness
+
+    with patch("httpx.AsyncClient", side_effect=ConnectionError("offline")):
+        result = await check_pypi_freshness()
+
+    assert result.ok is True
+    assert "Skipped" in result.detail

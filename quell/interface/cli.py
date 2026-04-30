@@ -253,11 +253,16 @@ def explain_cmd(
 def show_version() -> None:
     """Print the installed Quell version and exit.
 
+    Includes the resolved binary path so users can tell which install
+    is running (pipx vs. brew vs. pip) without running `which -a quell`.
+
     Examples:
       quell version
       quell --version    # canonical alias
     """
-    Output().line(f"quell {__version__}")
+    from quell.interface.main import _resolve_binary_path
+
+    Output().line(f"quell {__version__} ({_resolve_binary_path()})")
 
 
 @app.command()
