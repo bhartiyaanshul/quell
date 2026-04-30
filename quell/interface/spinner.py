@@ -1,11 +1,16 @@
 """Spinner / status context manager for long-running operations.
 
 Per ``docs/cli-design.md`` §10.1: animations only run when stdout is a
-TTY, ``--quiet``/``--json``/``--no-color`` are unset, ``QUELL_NO_ANIM``
-is unset, and the operation is expected to take > 200ms. This module
-checks those gates via ``Output.supports_animation`` and falls back to
-a single static line when animation isn't supported — so CI logs and
-non-TTY consumers get deterministic output.
+TTY, ``--quiet`` / ``--json`` / ``--no-color`` are unset, and
+``QUELL_NO_ANIM`` is unset. This module checks those gates via
+``Output.supports_animation`` and falls back to a single static line
+when animation isn't supported — so CI logs and non-TTY consumers
+get deterministic output.
+
+Phase 4.5 adds a Quell-branded spinner shape (``"quell"``): a
+braille-dot pulse rendered in the accent colour. Imported once at
+module load via ``_register_quell_spinner`` so any caller that asks
+for ``spinner="quell"`` (here or directly via Rich) gets the same look.
 
 Usage::
 
@@ -20,11 +25,43 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from rich.console import Console
+from rich.spinner import SPINNERS  # type: ignore[attr-defined]
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from quell.interface.output import Output
+
+
+# A glow-then-fade braille pulse — 12 frames at 80ms each completes in
+# ~1s, so the user sees a full breath cycle even on quick operations.
+# Braille keeps it Unicode-safe per spec §9.2 (no emoji).
+_QUELL_FRAMES: list[str] = [
+    "⠁",
+    "⠃",
+    "⠇",
+    "⡇",
+    "⣇",
+    "⣧",
+    "⣷",
+    "⣶",
+    "⣦",
+    "⣄",
+    "⡄",
+    "⡂",
+]
+
+
+def _register_quell_spinner() -> None:
+    """Register the ``quell`` spinner shape with Rich's global SPINNERS dict.
+
+    Idempotent — guarded so re-import doesn't clobber other registrations.
+    """
+    if "quell" not in SPINNERS:
+        SPINNERS["quell"] = {"interval": 80, "frames": _QUELL_FRAMES}
+
+
+_register_quell_spinner()
 
 
 class _StaticStatus:
@@ -62,10 +99,12 @@ def spinner(output: Output, message: str) -> Iterator[object]:
         yield _StaticStatus(console, message)
         return
 
-    # Real spinner. We render it on stderr so stdout stays clean for
-    # any data the wrapped block produces (json output, streamed events).
+    # Real spinner. Render on stderr so stdout stays clean for any
+    # data the wrapped block produces (json output, streamed events).
+    # Accent style picks up the Quell theme via the inherited rich
+    # theme — see Output's _THEME definition.
     console = Console(stderr=True)
-    with console.status(message, spinner="dots") as status:
+    with console.status(message, spinner="quell", spinner_style="#fb923c") as status:
         yield status
 
 

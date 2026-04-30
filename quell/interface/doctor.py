@@ -11,16 +11,27 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from collections.abc import Coroutine
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Protocol
 
 import httpx
 from pydantic import BaseModel
 
 from quell.interface.output import Output
+from quell.interface.progress import progress
 from quell.utils.errors import ConfigError
 from quell.utils.keyring_utils import get_secret
 from quell.utils.shell import command_exists, run_command
+
+
+class _Tracker(Protocol):
+    """Subset of progress.* trackers we need for per-check advancement."""
+
+    def advance(self, n: int = 1) -> None: ...
+    def update(self, label: str | None = None) -> None: ...
+
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -195,16 +206,55 @@ async def check_github_token() -> CheckResult:
 # ---------------------------------------------------------------------------
 
 
-async def _run_all_checks(project_dir: Path) -> list[CheckResult]:
-    results = await asyncio.gather(
+async def _run_all_checks(
+    project_dir: Path,
+    *,
+    tracker: _Tracker | None = None,
+) -> list[CheckResult]:
+    """Run every doctor check concurrently; advance *tracker* on each finish.
+
+    Without *tracker* the implementation matches the legacy ``gather``
+    behaviour. With one supplied, checks still run concurrently but
+    we ``asyncio.wait`` per completion so the spinner label can show
+    each result as it lands rather than only at the end.
+    """
+    coros: list[Coroutine[Any, Any, CheckResult]] = [
         check_python_version(),
         check_git(),
         check_docker(),
         check_config(project_dir),
         check_llm(project_dir),
         check_github_token(),
-    )
-    return list(results)
+    ]
+
+    if tracker is None:
+        results = await asyncio.gather(*coros)
+        return list(results)
+
+    tasks: list[asyncio.Task[CheckResult]] = [asyncio.create_task(c) for c in coros]
+    pending = set(tasks)
+    while pending:
+        done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        for task in done:
+            result = task.result()
+            tracker.advance()
+            mark = "✓" if result.ok else "✗"
+            tracker.update(f"{mark} {result.name}")
+    return [t.result() for t in tasks]
+
+
+def _run_with_progress(output: Output, project_dir: Path) -> list[CheckResult]:
+    """Wrap ``_run_all_checks`` in a progress bar when animation is on.
+
+    Without animation the bar adds nothing — the table emits at the end
+    anyway — so we skip the wrapper and avoid the trailing static
+    summary line that would otherwise duplicate the table's content.
+    """
+    if not output.supports_animation:
+        return asyncio.run(_run_all_checks(project_dir))
+
+    with progress(output, "Running checks", total=6) as tracker:
+        return asyncio.run(_run_all_checks(project_dir, tracker=tracker))
 
 
 def _to_payload(results: list[CheckResult]) -> DoctorRunData:
@@ -237,7 +287,7 @@ def run_doctor(
         layer in ``cli.py`` translates that to exit 0 / exit 1.
     """
     output = out or Output()
-    results = asyncio.run(_run_all_checks(project_dir or Path.cwd()))
+    results = _run_with_progress(output, project_dir or Path.cwd())
     payload = _to_payload(results)
 
     output.json("doctor.run", payload)

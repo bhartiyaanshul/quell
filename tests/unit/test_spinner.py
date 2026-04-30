@@ -70,3 +70,33 @@ def test_spinner_yields_static_under_json_mode(capsys: CaptureFixture[str]) -> N
     captured = capsys.readouterr()
     # stdout must remain empty — the consumer is parsing JSON there.
     assert captured.out == ""
+
+
+def test_quell_spinner_shape_registered() -> None:
+    """``quell`` spinner is registered with Rich's global SPINNERS dict."""
+    from rich.spinner import SPINNERS
+
+    assert "quell" in SPINNERS
+    shape = SPINNERS["quell"]
+    assert shape["frames"], "expected non-empty frames"
+    assert isinstance(shape["interval"], int)
+
+
+def test_spinner_disabled_when_quell_no_anim_env_set(
+    capsys: CaptureFixture[str], monkeypatch: object
+) -> None:
+    """``QUELL_NO_ANIM=1`` forces the static fallback even on a TTY."""
+    # ``monkeypatch`` is a pytest fixture; we restore via its API.
+    import pytest
+
+    mp = pytest.MonkeyPatch()
+    try:
+        mp.setenv("QUELL_NO_ANIM", "1")
+        out = Output(no_color=True)
+        assert out.supports_animation is False
+        with spinner(out, "Working"):
+            pass
+        # Static fallback emits the message to stderr.
+        assert "Working" in capsys.readouterr().err
+    finally:
+        mp.undo()
