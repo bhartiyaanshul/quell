@@ -27,6 +27,19 @@ def _print_version(value: bool) -> None:
         raise typer.Exit()
 
 
+def _emit_help_json(value: bool) -> None:
+    """Typer callback that emits ``help.tree`` JSON and exits.
+
+    Imports lazily so the cold-CLI startup path doesn't pay for Click
+    introspection unless the flag is actually requested.
+    """
+    if value:
+        from quell.interface.help_json import emit_help_tree
+
+        emit_help_tree(app)
+        raise typer.Exit()
+
+
 def _print_root_summary(out: Output) -> None:
     """Render the no-args landing page per docs/cli-design.md §11.1.
 
@@ -65,11 +78,18 @@ def main(
         is_eager=True,
         callback=_print_version,
     ),
+    help_json: bool = typer.Option(  # noqa: B008
+        False,
+        "--help-json",
+        help="Emit the full help tree as JSON for tool integration.",
+        is_eager=True,
+        callback=_emit_help_json,
+    ),
 ) -> None:
     """Quell — autonomous incident response for production systems."""
-    # ``version`` handled by the eager callback; consume it so mypy/ruff
-    # don't complain about the unused parameter.
-    _ = version
+    # ``version`` and ``help_json`` are handled by their eager callbacks;
+    # consume them so mypy/ruff don't complain about unused parameters.
+    _ = version, help_json
     if ctx.invoked_subcommand is None:
         _print_root_summary(Output())
 
