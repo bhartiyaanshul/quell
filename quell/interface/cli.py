@@ -220,7 +220,12 @@ def doctor(
 
 @app.command(name="version")
 def show_version() -> None:
-    """Print the installed Quell version and exit."""
+    """Print the installed Quell version and exit.
+
+    Examples:
+      quell version
+      quell --version    # canonical alias
+    """
     Output().line(f"quell {__version__}")
 
 
@@ -248,6 +253,11 @@ def watch(
     ``--quiet`` / ``--no-color`` for now (a JSONL stream is on the
     Phase 4 roadmap). The flags currently scope to the wrapper-level
     ``interrupted`` notice the CLI emits on Ctrl-C.
+
+    Examples:
+      quell watch                              # use cwd
+      quell watch --path ~/projects/myapp      # different project
+      quell watch 2>&1 | tee quell.log         # capture loguru output
     """
     from quell.config.loader import load_config
     from quell.watch import watch as run_watch
@@ -287,6 +297,11 @@ def dashboard(
     The dashboard is a Next.js app — its own logging is unaffected by
     ``--quiet`` / ``--no-color``. The flags currently scope to the
     wrapper-level ``interrupted`` notice on Ctrl-C.
+
+    Examples:
+      quell dashboard                          # http://localhost:7777
+      quell dashboard --port 8080 --no-open    # custom port, no browser
+      quell dashboard --host 0.0.0.0           # bind on every interface
     """
     from quell.dashboard.launcher import run_dashboard_sync
 
