@@ -171,11 +171,18 @@ configured.  Inside the sandbox the executor detects
 
 ## CLI + watch loop
 
-- `quell/interface/cli.py` — Typer entry points for `init`, `doctor`,
-  `watch`, `history`, `show`, `stats`, `version`.
+- `quell/interface/cli.py` — Typer entry points for global verbs
+  (`init`, `doctor`, `watch`, `dashboard`, `version`) plus deprecated
+  aliases (`history`, `show`, `stats`, `replay`) that forward to the
+  `incident` resource handlers.
 - `quell/interface/wizard.py` — the `quell init` flow.
 - `quell/interface/doctor.py` — the `quell doctor` checks.
-- `quell/interface/history.py` — helpers for `history`, `show`, `stats`.
+- `quell/interface/incident_cmd.py` — Typer commands for the
+  `incident` resource (`list`, `show`, `stats`, `replay`).
+- `quell/interface/incident_handlers.py` — async handlers that back
+  both the new commands and the deprecated aliases.
+- `quell/interface/incident_schemas.py` — Pydantic schemas for the
+  `incident.*` JSON envelopes.
 - `quell/watch.py` — the main event loop wiring Monitor → Detector →
   IncidentCommander and scheduling investigations as background tasks.
 
