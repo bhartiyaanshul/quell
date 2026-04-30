@@ -47,8 +47,13 @@ def _format_string(value: str) -> str:
     return f'"{escaped}"'
 
 
-def _format_scalar(value: Any) -> str:
-    """Render a scalar TOML value (string, bool, int, float, list-of-scalars)."""
+def _format_scalar(value: object) -> str:
+    """Render a scalar TOML value (string, bool, int, float, list-of-scalars).
+
+    Typed as ``object`` rather than ``Any`` so callers can't slip a
+    typed value past the runtime ``isinstance`` ladder below — this
+    function deliberately discriminates on runtime type.
+    """
     if isinstance(value, bool):
         # bool must come before int — bool is a subclass of int in Python.
         return "true" if value else "false"
@@ -62,7 +67,7 @@ def _format_scalar(value: Any) -> str:
     raise TypeError(f"Cannot serialize {type(value).__name__} to TOML: {value!r}")
 
 
-def _is_array_of_tables(value: Any) -> bool:
+def _is_array_of_tables(value: object) -> bool:
     """True if *value* is a non-empty list whose first element is a dict."""
     return isinstance(value, list) and len(value) > 0 and isinstance(value[0], dict)
 
