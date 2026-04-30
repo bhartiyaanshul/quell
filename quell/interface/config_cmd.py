@@ -1,0 +1,161 @@
+"""``quell config <verb>`` — Typer entry points.
+
+Phase 3.2 of the v0.3.0 redesign (see ``docs/cli-design.md`` §3.2).
+This module owns the public flag surface and per-command examples,
+then delegates to the handlers in :mod:`quell.interface.config_handlers`.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Annotated
+
+import typer
+
+from quell.interface.cli_helpers import build_output, safe_run
+from quell.interface.config_handlers import (
+    edit_handler,
+    get_handler,
+    set_handler,
+    show_handler,
+    validate_handler,
+)
+
+config_app = typer.Typer(
+    name="config",
+    help="Configuration management — show, get, set, validate, edit.",
+    no_args_is_help=True,
+)
+
+
+@config_app.command("show")
+def show_cmd(
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project directory (defaults to cwd)."),
+    ] = None,
+    json_mode: Annotated[
+        bool, typer.Option("--json", help="Emit JSON instead of TOML.")
+    ] = False,
+    quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Errors only.")] = False,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
+) -> None:
+    """Show the merged configuration.
+
+    Examples:
+      quell config show
+      quell config show --json | jq '.data.config.llm.model'
+    """
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: show_handler(out, path))
+
+
+@config_app.command("get")
+def get_cmd(
+    key: Annotated[str, typer.Argument(help="Dotted config key, e.g. 'llm.model'.")],
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project directory (defaults to cwd)."),
+    ] = None,
+    json_mode: Annotated[
+        bool, typer.Option("--json", help="Emit JSON instead of the raw value.")
+    ] = False,
+    quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Errors only.")] = False,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
+) -> None:
+    """Get a single config value by dotted key.
+
+    Examples:
+      quell config get llm.model
+      quell config get agent.max_iterations --json
+    """
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: get_handler(out, key, path))
+
+
+@config_app.command("set")
+def set_cmd(
+    key: Annotated[str, typer.Argument(help="Dotted config key, e.g. 'llm.model'.")],
+    value: Annotated[
+        str, typer.Argument(help="New value (parsed per the field type).")
+    ],
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project directory (defaults to cwd)."),
+    ] = None,
+    yes: Annotated[
+        bool, typer.Option("--yes", "-y", help="Skip the confirmation prompt.")
+    ] = False,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show what would change without writing.")
+    ] = False,
+    json_mode: Annotated[
+        bool, typer.Option("--json", help="Emit JSON instead of human output.")
+    ] = False,
+    quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Errors only.")] = False,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
+) -> None:
+    """Set a config value by dotted key (writes to the local config file).
+
+    Examples:
+      quell config set llm.model "anthropic/claude-haiku-4-5" --yes
+      quell config set agent.max_iterations 100 --dry-run
+    """
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(
+        out,
+        lambda: set_handler(out, key, value, path=path, yes=yes, dry_run=dry_run),
+    )
+
+
+@config_app.command("validate")
+def validate_cmd(
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project directory (defaults to cwd)."),
+    ] = None,
+    json_mode: Annotated[
+        bool, typer.Option("--json", help="Emit JSON instead of human output.")
+    ] = False,
+    quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Errors only.")] = False,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
+) -> None:
+    """Validate the local config file against the schema.
+
+    Examples:
+      quell config validate
+      quell config validate --json   # 0 = valid, 3 = invalid
+    """
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
+    safe_run(out, lambda: validate_handler(out, path))
+
+
+@config_app.command("edit")
+def edit_cmd(
+    path: Annotated[
+        Path | None,
+        typer.Option("--path", "-p", help="Project directory (defaults to cwd)."),
+    ] = None,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
+) -> None:
+    """Open the local config file in $EDITOR. Validates on save.
+
+    Examples:
+      quell config edit              # uses $EDITOR (or vi)
+      EDITOR=code-w quell config edit
+    """
+    out = build_output(no_color=no_color)
+    safe_run(out, lambda: edit_handler(out, path))
+
+
+__all__ = ["config_app"]

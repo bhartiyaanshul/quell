@@ -1,7 +1,10 @@
-"""`quell doctor` health check — verifies the environment is correctly set up.
+"""``quell doctor`` health check — verifies the environment is set up.
 
 Each check is a small async function that returns a :class:`CheckResult`.
-Results are printed as a Rich table with green/red status icons.
+Phase 3.5 adds the v0.3 universal-flag surface: results render via the
+``Output`` facade in default mode, or as a single ``doctor.run`` JSON
+envelope under ``--json``. The exit code is 0 when every check passes
+and 1 otherwise — same contract as before.
 """
 
 from __future__ import annotations
@@ -12,14 +15,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import httpx
-from rich.console import Console
-from rich.table import Table
+from pydantic import BaseModel
 
+from quell.interface.output import Output
 from quell.utils.errors import ConfigError
 from quell.utils.keyring_utils import get_secret
 from quell.utils.shell import command_exists, run_command
-
-_console = Console()
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -35,13 +36,28 @@ class CheckResult:
     detail: str = ""
 
 
+class CheckResultPayload(BaseModel):
+    """JSON-serializable form of a single check result."""
+
+    name: str
+    status: str  # "ok" | "fail"
+    detail: str
+
+
+class DoctorRunData(BaseModel):
+    """Data payload for ``doctor.run``."""
+
+    checks: list[CheckResultPayload]
+    passed: int
+    failed: int
+
+
 # ---------------------------------------------------------------------------
 # Individual checks
 # ---------------------------------------------------------------------------
 
 
 async def check_python_version() -> CheckResult:
-    """Verify Python is 3.12+."""
     major, minor = sys.version_info[:2]
     ok = (major, minor) >= (3, 12)
     return CheckResult(
@@ -52,7 +68,6 @@ async def check_python_version() -> CheckResult:
 
 
 async def check_git() -> CheckResult:
-    """Verify git is installed and on PATH."""
     exists = await command_exists("git")
     return CheckResult(
         name="git installed",
@@ -62,7 +77,6 @@ async def check_git() -> CheckResult:
 
 
 async def check_docker() -> CheckResult:
-    """Verify Docker daemon is running and reachable."""
     try:
         result = await run_command("docker", "info", "--format", "{{.ServerVersion}}")
         if result.ok:
@@ -85,7 +99,6 @@ async def check_docker() -> CheckResult:
 
 
 async def check_config(project_dir: Path) -> CheckResult:
-    """Verify .quell/config.toml exists and is valid."""
     from quell.config.loader import load_config
 
     try:
@@ -100,7 +113,6 @@ async def check_config(project_dir: Path) -> CheckResult:
 
 
 async def check_llm(project_dir: Path) -> CheckResult:
-    """Verify the configured LLM provider is reachable."""
     from quell.config.loader import load_config
 
     try:
@@ -114,7 +126,6 @@ async def check_llm(project_dir: Path) -> CheckResult:
 
     provider = cfg.llm.model.split("/")[0] if "/" in cfg.llm.model else "openai"
     api_key = get_secret(f"quell/{provider}", "api_key")
-
     if not api_key:
         return CheckResult(
             name="LLM reachable",
@@ -122,7 +133,6 @@ async def check_llm(project_dir: Path) -> CheckResult:
             detail=f"No API key for '{provider}' — run `quell init`",
         )
 
-    # Simple reachability check: hit the provider's base URL
     _provider_urls: dict[str, str] = {
         "anthropic": "https://api.anthropic.com",
         "openai": "https://api.openai.com",
@@ -150,7 +160,6 @@ async def check_llm(project_dir: Path) -> CheckResult:
 
 
 async def check_github_token() -> CheckResult:
-    """Verify the GitHub token is set and valid."""
     token = get_secret("quell/github", "token")
     if not token:
         return CheckResult(
@@ -187,7 +196,6 @@ async def check_github_token() -> CheckResult:
 
 
 async def _run_all_checks(project_dir: Path) -> list[CheckResult]:
-    """Run all doctor checks concurrently and return results."""
     results = await asyncio.gather(
         check_python_version(),
         check_git(),
@@ -199,40 +207,55 @@ async def _run_all_checks(project_dir: Path) -> list[CheckResult]:
     return list(results)
 
 
-def run_doctor(project_dir: Path | None = None) -> bool:
-    """Run all health checks, print a Rich table, and return True if all pass.
+def _to_payload(results: list[CheckResult]) -> DoctorRunData:
+    return DoctorRunData(
+        checks=[
+            CheckResultPayload(
+                name=r.name, status="ok" if r.ok else "fail", detail=r.detail
+            )
+            for r in results
+        ],
+        passed=sum(1 for r in results if r.ok),
+        failed=sum(1 for r in results if not r.ok),
+    )
+
+
+def run_doctor(
+    project_dir: Path | None = None,
+    *,
+    out: Output | None = None,
+) -> bool:
+    """Run every health check, render via *out*, return True if all pass.
 
     Args:
         project_dir: Project root to check. Defaults to cwd.
+        out:         Output facade. Built fresh in default mode if omitted —
+                     keeps the legacy ``run_doctor()`` call sites working.
 
     Returns:
-        True if every check passed, False otherwise.
+        ``True`` if every check passed, ``False`` otherwise. The CLI
+        layer in ``cli.py`` translates that to exit 0 / exit 1.
     """
+    output = out or Output()
     results = asyncio.run(_run_all_checks(project_dir or Path.cwd()))
+    payload = _to_payload(results)
 
-    table = Table(title="Quell Doctor", show_header=True, header_style="bold cyan")
-    table.add_column("Check", style="bold")
-    table.add_column("Status", justify="center")
-    table.add_column("Details")
+    output.json("doctor.run", payload)
+    if output.is_json or output.is_quiet:
+        return payload.failed == 0
 
-    for r in results:
-        status = "[green]✓ OK[/green]" if r.ok else "[red]✗ FAIL[/red]"
-        table.add_row(r.name, status, r.detail)
+    output.header("Quell Doctor")
+    table_rows = [[r.name, "OK" if r.ok else "FAIL", r.detail] for r in results]
+    output.table(table_rows, headers=["CHECK", "STATUS", "DETAILS"])
 
-    _console.print()
-    _console.print(table)
-    _console.print()
-
-    all_ok = all(r.ok for r in results)
-    if all_ok:
-        _console.print("[green]All checks passed — Quell is ready.[/green]\n")
+    if payload.failed == 0:
+        output.success("All checks passed — Quell is ready.")
     else:
-        failed = sum(1 for r in results if not r.ok)
-        _console.print(
-            f"[yellow]{failed} check(s) failed.[/yellow] "
-            "Fix the issues above, then run [bold]quell doctor[/bold] again.\n"
+        output.warn(
+            f"{payload.failed} check(s) failed. "
+            "Fix the issues above, then run `quell doctor` again."
         )
-    return all_ok
+    return payload.failed == 0
 
 
-__all__ = ["CheckResult", "run_doctor"]
+__all__ = ["CheckResult", "CheckResultPayload", "DoctorRunData", "run_doctor"]

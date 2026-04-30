@@ -68,7 +68,11 @@ async def watch(config: QuellConfig) -> None:
     detector = Detector(session_factory=session_factory)
 
     monitor: Monitor = create_monitor(config.monitors[0])
-    all_skills = list_skills()
+    # Drop user-disabled skills before select_applicable so they don't
+    # get auto-loaded into the system prompt. Explicit-by-name loads via
+    # subagent spawn still work — disabling just removes from auto-pickup.
+    disabled = set(config.skills.disabled)
+    all_skills = [s for s in list_skills() if s.name not in disabled]
     notifiers = _build_notifiers(config)
     background: set[asyncio.Task[dict[str, object]]] = set()
 

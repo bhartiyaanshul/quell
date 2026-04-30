@@ -18,14 +18,13 @@ from typing import Annotated
 
 import typer
 
-from quell.interface.errors import QuellCLIError, handle_cli_error
+from quell.interface.cli_helpers import build_output, safe_run
 from quell.interface.incident_handlers import (
     list_handler,
     replay_handler,
     show_handler,
     stats_handler,
 )
-from quell.interface.output import Output
 from quell.utils.timeparse import parse_since
 
 incident_app = typer.Typer(
@@ -72,22 +71,21 @@ def list_cmd(
       quell incident list --since "1 week ago" --limit 50
       quell incident list --json | jq '.data.incidents[].id' # pipe to jq
     """
-    out = Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
-    try:
-        since_dt = parse_since(since) if since else None
-    except QuellCLIError as exc:
-        code = handle_cli_error(exc, out)
-        raise typer.Exit(code=code) from None
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
 
-    asyncio.run(
-        list_handler(
-            out,
-            limit=limit,
-            status=status,
-            severity=severity,
-            since_dt=since_dt,
+    def _run() -> None:
+        since_dt = parse_since(since) if since else None
+        asyncio.run(
+            list_handler(
+                out,
+                limit=limit,
+                status=status,
+                severity=severity,
+                since_dt=since_dt,
+            )
         )
-    )
+
+    safe_run(out, _run)
 
 
 @incident_app.command("show")
@@ -110,7 +108,7 @@ def show_cmd(
       quell incident show inc_a1b2c3d4
       quell incident show inc_a1b2c3d4 --json
     """
-    out = Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
     asyncio.run(show_handler(out, incident_id))
 
 
@@ -131,7 +129,7 @@ def stats_cmd(
       quell incident stats
       quell incident stats --json
     """
-    out = Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
     asyncio.run(stats_handler(out))
 
 
@@ -153,7 +151,7 @@ def replay_cmd(
       quell incident replay inc_a1b2c3d4
       quell incident replay inc_a1b2c3d4 --json > timeline.json
     """
-    out = Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
+    out = build_output(json_mode=json_mode, quiet=quiet, no_color=no_color)
     asyncio.run(replay_handler(out, incident_id))
 
 

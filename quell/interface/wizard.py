@@ -69,7 +69,7 @@ def _detect_git_remote(path: Path) -> str | None:
         return None
 
 
-def _ensure_gitignore(path: Path) -> None:
+def ensure_gitignore(path: Path) -> None:
     """Ensure .quell/ is listed in the project .gitignore."""
     gitignore = path / ".gitignore"
     entry = ".quell/\n"
@@ -86,7 +86,7 @@ def _ensure_gitignore(path: Path) -> None:
         )
 
 
-def _write_config_toml(path: Path, data: dict[str, Any]) -> None:
+def write_config_toml(path: Path, data: dict[str, Any]) -> None:
     """Write *data* to ``<path>/.quell/config.toml`` as valid TOML."""
     quell_dir = path / ".quell"
     quell_dir.mkdir(exist_ok=True)
@@ -344,8 +344,8 @@ async def _run_init_async(project_dir: Path) -> None:
     if notifier_config is not None:
         config_data["notifiers"] = [notifier_config]
 
-    _write_config_toml(project_dir, config_data)
-    _ensure_gitignore(project_dir)
+    write_config_toml(project_dir, config_data)
+    ensure_gitignore(project_dir)
 
     out.line("")
     out.success(f"Config written to {project_dir / '.quell' / 'config.toml'}")
@@ -355,4 +355,4 @@ async def _run_init_async(project_dir: Path) -> None:
     out.line("")
 
 
-__all__ = ["run_init"]
+__all__ = ["ensure_gitignore", "run_init", "write_config_toml"]

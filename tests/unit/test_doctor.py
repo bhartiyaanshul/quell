@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from typer.testing import CliRunner
+
+from quell.interface import cli  # noqa: F401 — registers commands on app
 from quell.interface.doctor import (
     CheckResult,
     check_config,
@@ -14,6 +18,9 @@ from quell.interface.doctor import (
     check_github_token,
     check_python_version,
 )
+from quell.interface.main import app
+
+_runner = CliRunner(mix_stderr=False)
 
 # ---------------------------------------------------------------------------
 # CheckResult
@@ -188,3 +195,27 @@ async def test_check_github_token_invalid() -> None:
         result = await check_github_token()
 
     assert result.ok is False
+
+
+# ---------------------------------------------------------------------------
+# CLI integration — --json envelope and --quiet exit code (Phase 3.5)
+# ---------------------------------------------------------------------------
+
+
+def test_doctor_json_envelope(tmp_path: Path) -> None:
+    """`quell doctor --json` emits a doctor.run envelope on stdout."""
+    result = _runner.invoke(app, ["doctor", "--path", str(tmp_path), "--json"])
+    payload = json.loads(result.stdout)
+    assert payload["kind"] == "doctor.run"
+    assert payload["version"] == "0.3"
+    assert "checks" in payload["data"]
+    assert isinstance(payload["data"]["passed"], int)
+    assert isinstance(payload["data"]["failed"], int)
+
+
+def test_doctor_quiet_suppresses_output(tmp_path: Path) -> None:
+    """`quell doctor --quiet` keeps stdout clean; exit code is the signal."""
+    result = _runner.invoke(app, ["doctor", "--path", str(tmp_path), "--quiet"])
+    assert result.stdout.strip() == ""
+    # exit_code is 1 if any check failed (likely in CI), else 0 — both are valid.
+    assert result.exit_code in (0, 1)
