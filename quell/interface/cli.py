@@ -28,11 +28,13 @@ from quell.interface.incident_handlers import (
 )
 from quell.interface.main import app
 from quell.interface.output import Output
+from quell.interface.skill_cmd import skill_app
 from quell.version import __version__
 
-# Resource sub-apps. Phases 3.3–3.4 will add skill / notifier.
+# Resource sub-apps. Phase 3.4 will add notifier.
 app.add_typer(incident_app, name="incident")
 app.add_typer(config_app, name="config")
+app.add_typer(skill_app, name="skill")
 
 
 def _emit_deprecation(old: str, new: str) -> None:

@@ -137,6 +137,17 @@ class SandboxConfig(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class SkillsConfig(BaseModel):
+    """User-managed skill state.
+
+    ``disabled`` slugs are filtered out before ``select_applicable`` runs
+    in the watch loop, so disabling a skill removes it from auto-pickup
+    without deleting the runbook file.
+    """
+
+    disabled: list[str] = Field(default_factory=list)
+
+
 class AgentConfig(BaseModel):
     """Runtime limits for every agent_loop invocation.
 
@@ -162,6 +173,7 @@ class QuellConfig(BaseModel):
     llm: LLMConfig = Field(default_factory=LLMConfig)
     agent: AgentConfig = Field(default_factory=AgentConfig)
     sandbox: SandboxConfig = Field(default_factory=SandboxConfig)
+    skills: SkillsConfig = Field(default_factory=SkillsConfig)
 
 
 __all__ = [
@@ -179,4 +191,5 @@ __all__ = [
     "AgentConfig",
     "SandboxConfig",
     "ResourceLimitsConfig",
+    "SkillsConfig",
 ]
