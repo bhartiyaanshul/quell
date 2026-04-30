@@ -72,14 +72,21 @@ async def list_incidents(
     session: AsyncSession,
     *,
     status: str | None = None,
+    severity: str | None = None,
+    since: datetime | None = None,
     limit: int = 50,
 ) -> Sequence[Incident]:
-    """Return incidents, optionally filtered by status.
+    """Return incidents, optionally filtered by status / severity / age.
 
     Args:
-        session: Active async session.
-        status:  If provided, only return incidents with this status.
-        limit:   Maximum number of rows to return.
+        session:  Active async session.
+        status:   If provided, only return incidents with this status.
+        severity: If provided, only return incidents with this severity.
+        since:    If provided, only return incidents with ``last_seen``
+                  on or after this timestamp. Compared against
+                  ``last_seen`` (not ``first_seen``) so a long-running
+                  incident still appears in recent windows.
+        limit:    Maximum number of rows to return.
 
     Returns:
         A sequence of :class:`Incident` ordered by ``last_seen`` descending.
@@ -87,6 +94,10 @@ async def list_incidents(
     query = sa.select(Incident).order_by(Incident.last_seen.desc()).limit(limit)
     if status is not None:
         query = query.where(Incident.status == status)
+    if severity is not None:
+        query = query.where(Incident.severity == severity)
+    if since is not None:
+        query = query.where(Incident.last_seen >= since)
     result = await session.execute(query)
     return result.scalars().all()
 

@@ -1,20 +1,54 @@
 """CLI command definitions for Quell.
 
 Imports the shared Typer ``app`` from ``quell.interface.main`` and
-registers ``init``, ``doctor``, and ``version`` as subcommands.
+registers global verbs (``init``, ``doctor``, ``watch``, ``dashboard``,
+``version``) plus resource sub-apps. Phase 3.1 adds the ``incident``
+resource (see ``docs/cli-design.md`` §3); the old top-level ``history``
+/ ``show`` / ``stats`` / ``replay`` commands remain as deprecated
+aliases that emit a stderr warning and forward to the same handlers.
+
 This module must be imported by ``main.py`` to activate the commands.
 """
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
+from quell.interface.incident_cmd import incident_app
+from quell.interface.incident_handlers import (
+    list_handler,
+    replay_handler,
+    show_handler,
+    stats_handler,
+)
 from quell.interface.main import app
 from quell.interface.output import Output
 from quell.version import __version__
+
+# Resource sub-apps. Phase 3 adds one per resource; Phases 3.2–3.4 will
+# follow with config / skill / notifier.
+app.add_typer(incident_app, name="incident")
+
+
+def _emit_deprecation(old: str, new: str) -> None:
+    """Print a deprecation warning to stderr.
+
+    Goes to stderr regardless of ``--json`` / ``--quiet`` so JSON output
+    on stdout stays clean and CI logs still surface the migration hint.
+    Stable prefix (``[deprecation]``) so parsers can grep for it.
+
+    Uses ``typer.echo(err=True)`` rather than raw ``sys.stderr.write`` so
+    Click's ``CliRunner`` captures it correctly under ``mix_stderr=False``.
+    """
+    typer.echo(
+        f"[deprecation] '{old}' is deprecated; use '{new}' instead. "
+        "(will be removed in v0.4.0)",
+        err=True,
+    )
 
 
 @app.command()
@@ -72,8 +106,6 @@ def watch(
     ] = None,
 ) -> None:
     """Start the monitor -> detector -> agent investigation loop."""
-    import asyncio
-
     from quell.config.loader import load_config
     from quell.watch import watch as run_watch
 
@@ -82,50 +114,6 @@ def watch(
         asyncio.run(run_watch(config))
     except KeyboardInterrupt:
         Output().info("(quell watch: interrupted)")
-
-
-@app.command()
-def history(
-    limit: Annotated[int, typer.Option("--limit", "-n", help="Max rows to show.")] = 10,
-) -> None:
-    """Show the most recent incidents."""
-    import asyncio
-
-    from quell.interface.history import print_history
-
-    asyncio.run(print_history(limit))
-
-
-@app.command()
-def show(incident_id: str) -> None:
-    """Show details of a single incident by ID."""
-    import asyncio
-
-    from quell.interface.history import print_incident
-
-    asyncio.run(print_incident(incident_id))
-
-
-@app.command()
-def stats() -> None:
-    """Show aggregate incident statistics."""
-    import asyncio
-
-    from quell.interface.history import print_stats
-
-    asyncio.run(print_stats())
-
-
-@app.command()
-def replay(incident_id: str) -> None:
-    """Print the full event timeline for a past incident investigation."""
-    import asyncio
-
-    from quell.interface.replay import run_replay
-
-    ok = asyncio.run(run_replay(incident_id))
-    if not ok:
-        raise typer.Exit(code=1)
 
 
 @app.command()
@@ -170,8 +158,6 @@ def test_notifier(
     ] = None,
 ) -> None:
     """Send a synthetic test incident through a configured notifier."""
-    import asyncio
-
     from quell.interface.notifier_test import run_test_notifier
 
     ok = asyncio.run(run_test_notifier(channel=channel, project_dir=path))
@@ -179,15 +165,59 @@ def test_notifier(
         raise typer.Exit(code=1)
 
 
+# ---------------------------------------------------------------------------
+# Deprecated aliases — forward to the ``incident`` sub-app handlers.
+# Removed in v0.4.0 per docs/cli-design.md §3.4.
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def history(
+    limit: Annotated[int, typer.Option("--limit", "-n", help="Max rows to show.")] = 10,
+) -> None:
+    """[deprecated] Use ``quell incident list`` instead."""
+    _emit_deprecation("quell history", "quell incident list")
+    asyncio.run(
+        list_handler(
+            Output(),
+            limit=limit,
+            status=None,
+            severity=None,
+            since_dt=None,
+        )
+    )
+
+
+@app.command()
+def show(incident_id: str) -> None:
+    """[deprecated] Use ``quell incident show <id>`` instead."""
+    _emit_deprecation("quell show", "quell incident show")
+    asyncio.run(show_handler(Output(), incident_id))
+
+
+@app.command()
+def stats() -> None:
+    """[deprecated] Use ``quell incident stats`` instead."""
+    _emit_deprecation("quell stats", "quell incident stats")
+    asyncio.run(stats_handler(Output()))
+
+
+@app.command()
+def replay(incident_id: str) -> None:
+    """[deprecated] Use ``quell incident replay <id>`` instead."""
+    _emit_deprecation("quell replay", "quell incident replay")
+    asyncio.run(replay_handler(Output(), incident_id))
+
+
 __all__ = [
-    "init",
+    "dashboard",
     "doctor",
-    "show_version",
-    "watch",
     "history",
+    "init",
+    "replay",
     "show",
+    "show_version",
     "stats",
     "test_notifier",
-    "dashboard",
-    "replay",
+    "watch",
 ]

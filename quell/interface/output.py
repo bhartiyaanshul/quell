@@ -163,7 +163,9 @@ class Output:
                 fix_command=self._first_line(fix),
                 exit_code=exit_code,
             )
-            self._stderr.print(envelope.model_dump_json())
+            # Bypass Rich — it wraps long JSON to the console width.
+            sys.stderr.write(envelope.model_dump_json() + "\n")
+            sys.stderr.flush()
             return
 
         self._stderr.print(f"[error]Error:[/error] {message}")

@@ -17,16 +17,26 @@ async def count_incidents(
     session: AsyncSession,
     *,
     status: str | None = None,
+    severity: str | None = None,
+    since: datetime | None = None,
 ) -> int:
-    """Return the total number of incidents, optionally filtered by status.
+    """Return the total number of incidents matching the given filters.
 
     Args:
-        session: Active async session.
-        status:  If given, count only incidents with this status.
+        session:  Active async session.
+        status:   If given, count only incidents with this status.
+        severity: If given, count only incidents with this severity.
+        since:    If given, count only incidents with ``last_seen``
+                  on or after this timestamp. Mirrors the filter
+                  semantics of :func:`list_incidents`.
     """
     query = sa.select(sa.func.count()).select_from(Incident)
     if status is not None:
         query = query.where(Incident.status == status)
+    if severity is not None:
+        query = query.where(Incident.severity == severity)
+    if since is not None:
+        query = query.where(Incident.last_seen >= since)
     result = await session.execute(query)
     return result.scalar_one()
 
