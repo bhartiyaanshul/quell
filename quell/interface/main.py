@@ -27,6 +27,33 @@ def _print_version(value: bool) -> None:
         raise typer.Exit()
 
 
+def _print_root_summary(out: Output) -> None:
+    """Render the no-args landing page per docs/cli-design.md §11.1.
+
+    Shows a small resource list and the most common commands rather
+    than dumping the full ``--help`` tree. Users discover details by
+    running ``quell <command> --help`` from there.
+    """
+    out.line("Quell — an on-call engineer that never sleeps.")
+    out.line("")
+    out.line("Usage:  quell <resource> <verb> [flags]")
+    out.line("        quell <verb> [flags]                # global verbs")
+    out.line("")
+    out.line("Common commands:")
+    out.line("  quell init             Configure Quell for a project")
+    out.line("  quell watch            Start the investigation loop")
+    out.line("  quell incident list    Show recent incidents")
+    out.line("  quell doctor           Verify your setup")
+    out.line("")
+    out.line("Resources:")
+    out.line("  incident    Past investigations")
+    out.line("  config      Configuration management")
+    out.line("  skill       Runbook management")
+    out.line("  notifier    Output channel management")
+    out.line("")
+    out.line("Run `quell <command> --help` for examples and flag details.")
+
+
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -44,7 +71,7 @@ def main(
     # don't complain about the unused parameter.
     _ = version
     if ctx.invoked_subcommand is None:
-        Output().line(f"Quell v{__version__} — run `quell --help` for commands")
+        _print_root_summary(Output())
 
 
 # Register subcommands by importing the CLI module.
