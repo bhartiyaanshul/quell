@@ -133,12 +133,24 @@ def coerce_value(value: str, annotation: Any) -> Any:  # noqa: ANN401
         try:
             return int(value)
         except ValueError as exc:
-            raise UsageError(f"Could not parse {value!r} as an integer.") from exc
+            raise UsageError(
+                f"Could not parse {value!r} as an integer.",
+                fix=(
+                    "Pass a whole number, "
+                    "e.g. `quell config set agent.max_iterations 100`."
+                ),
+            ) from exc
     if annotation is float:
         try:
             return float(value)
         except ValueError as exc:
-            raise UsageError(f"Could not parse {value!r} as a float.") from exc
+            raise UsageError(
+                f"Could not parse {value!r} as a float.",
+                fix=(
+                    "Pass a decimal value, "
+                    "e.g. `quell config set agent.max_cost_usd 5.0`."
+                ),
+            ) from exc
     if annotation is str:
         return value
 
