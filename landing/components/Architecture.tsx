@@ -107,10 +107,10 @@ export function Architecture() {
           <Node title="Tools" subtitle="code/git/monitoring/reporting" />
           <Node title="Skills" subtitle="19 bundled runbooks" />
           <Node title="Memory" subtitle="AgentRun · Event · Finding" />
-          <Node title="CLI" subtitle="init · watch · dashboard · replay" />
+          <Node title="CLI" subtitle="resource · verb · --json · exit codes" />
         </div>
 
-        {/* Bottom row — v0.2 surfaces */}
+        {/* Bottom row — observability + integration surfaces */}
         <div className="relative mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
           <Node title="Notifiers" subtitle="Slack · Discord · Telegram" />
           <Node title="Dashboard" subtitle="Next.js + FastAPI" />
