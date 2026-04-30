@@ -219,3 +219,52 @@ def test_doctor_quiet_suppresses_output(tmp_path: Path) -> None:
     assert result.stdout.strip() == ""
     # exit_code is 1 if any check failed (likely in CI), else 0 — both are valid.
     assert result.exit_code in (0, 1)
+
+
+# ---------------------------------------------------------------------------
+# check_single_install (Phase 6.1)
+# ---------------------------------------------------------------------------
+
+
+async def test_check_single_install_passes_with_no_quell_on_path(
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    """Running from source / pytest: no `quell` on PATH is a pass."""
+    from quell.interface.doctor import check_single_install
+
+    monkeypatch.setattr("quell.interface.doctor._find_quell_binaries", lambda: [])
+    result = await check_single_install()
+    assert result.ok is True
+
+
+async def test_check_single_install_passes_with_one_binary(
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    from quell.interface.doctor import check_single_install
+
+    monkeypatch.setattr(
+        "quell.interface.doctor._find_quell_binaries",
+        lambda: [Path("/Users/dev/.local/bin/quell")],
+    )
+    result = await check_single_install()
+    assert result.ok is True
+    assert "/Users/dev/.local/bin/quell" in result.detail
+
+
+async def test_check_single_install_fails_with_multiple(
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    """Multiple distinct binaries — flag with the corrective command."""
+    from quell.interface.doctor import check_single_install
+
+    monkeypatch.setattr(
+        "quell.interface.doctor._find_quell_binaries",
+        lambda: [
+            Path("/Users/dev/.local/bin/quell"),
+            Path("/opt/homebrew/bin/quell"),
+        ],
+    )
+    result = await check_single_install()
+    assert result.ok is False
+    assert "2" in result.detail
+    assert "pip uninstall" in result.detail

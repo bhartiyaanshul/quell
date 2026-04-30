@@ -10,6 +10,7 @@ and 1 otherwise — same contract as before.
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from collections.abc import Coroutine
 from dataclasses import dataclass
@@ -24,6 +25,41 @@ from quell.interface.progress import progress
 from quell.utils.errors import ConfigError
 from quell.utils.keyring_utils import get_secret
 from quell.utils.shell import command_exists, run_command
+
+
+def _find_quell_binaries() -> list[Path]:
+    """Return every ``quell`` executable found on ``$PATH``.
+
+    Cross-platform: scans the path entries directly so Windows
+    ``quell.exe`` / Unix ``quell`` are both picked up. Resolved paths
+    are deduplicated so a directory listed twice on PATH doesn't show
+    a phantom duplicate; resolution also follows symlinks (pipx /
+    brew shims) so the count reflects genuinely distinct installs.
+    """
+    extensions: tuple[str, ...] = (
+        (".exe", ".cmd", ".bat") if sys.platform.startswith("win") else ("",)
+    )
+    found: list[Path] = []
+    seen: set[Path] = set()
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        if not entry:
+            continue
+        directory = Path(entry)
+        for ext in extensions:
+            candidate = directory / f"quell{ext}"
+            if not candidate.is_file():
+                continue
+            if not os.access(candidate, os.X_OK):
+                continue
+            try:
+                resolved = candidate.resolve()
+            except OSError:
+                continue
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            found.append(candidate)
+    return found
 
 
 class _Tracker(Protocol):
@@ -66,6 +102,29 @@ class DoctorRunData(BaseModel):
 # ---------------------------------------------------------------------------
 # Individual checks
 # ---------------------------------------------------------------------------
+
+
+async def check_single_install() -> CheckResult:
+    """Verify only one ``quell`` is on PATH (Phase 6.1).
+
+    Multiple installs (a stray ``pip install quell`` shadowing the
+    canonical pipx one, say) is a real footgun: ``quell --version``
+    might disagree with whatever the user just upgraded. This check
+    flags that case and points at the corrective ``pip uninstall``.
+    """
+    binaries = _find_quell_binaries()
+    if len(binaries) <= 1:
+        detail = str(binaries[0]) if binaries else "running from source"
+        return CheckResult(name="Single install", ok=True, detail=detail)
+    paths = ", ".join(str(b) for b in binaries)
+    return CheckResult(
+        name="Single install",
+        ok=False,
+        detail=(
+            f"{len(binaries)} `quell` binaries on PATH ({paths}) — "
+            "run `pip uninstall -y quell` to keep just the pipx install"
+        ),
+    )
 
 
 async def check_python_version() -> CheckResult:
@@ -222,6 +281,7 @@ async def _run_all_checks(
         check_python_version(),
         check_git(),
         check_docker(),
+        check_single_install(),
         check_config(project_dir),
         check_llm(project_dir),
         check_github_token(),
@@ -253,7 +313,7 @@ def _run_with_progress(output: Output, project_dir: Path) -> list[CheckResult]:
     if not output.supports_animation:
         return asyncio.run(_run_all_checks(project_dir))
 
-    with progress(output, "Running checks", total=6) as tracker:
+    with progress(output, "Running checks", total=7) as tracker:
         return asyncio.run(_run_all_checks(project_dir, tracker=tracker))
 
 
