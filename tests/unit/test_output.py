@@ -159,7 +159,18 @@ def test_render_methods_suppressed_in_quiet(capsys: CaptureFixture[str]) -> None
     out.table([["x"]], headers=["a"])
     out.key_value([("k", "v")])
     out.line("raw")
+    out.styled("[accent]styled[/accent]")
     assert capsys.readouterr().out == ""
+
+
+def test_styled_interprets_markup(capsys: CaptureFixture[str]) -> None:
+    """Mirror of `out.line` but with markup interpretation enabled."""
+    Output(no_color=True).styled("[accent]hello[/accent]")
+    out = capsys.readouterr().out
+    # No-color disables ANSI but markup tags are still consumed.
+    assert "hello" in out
+    assert "[accent]" not in out
+    assert "[/accent]" not in out
 
 
 def test_render_methods_suppressed_in_json(capsys: CaptureFixture[str]) -> None:
