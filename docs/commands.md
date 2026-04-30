@@ -49,6 +49,24 @@ quell doctor --json | jq '.data.failed == 0'
 quell doctor --quiet || echo "something is wrong"
 ```
 
+### `quell explain`
+
+Verbose, agent-friendly docs for a single command or resource.
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `command` | text |  |  |
+| `--no-color` | boolean |  | Disable ANSI colors. |
+| `--help` | boolean |  | Show this message and exit. |
+
+**Examples:**
+
+```
+quell explain                       # root command tree
+quell explain incident list         # one verb in detail
+quell explain config                # whole sub-app
+```
+
 ### `quell history`
 
 [deprecated] Use ``quell incident list`` instead.

@@ -218,6 +218,37 @@ def doctor(
         raise typer.Exit(code=1)
 
 
+@app.command(name="explain")
+def explain_cmd(
+    command: Annotated[
+        list[str] | None,
+        typer.Argument(
+            help="Command path to explain, e.g. 'incident list'. Omit for root.",
+        ),
+    ] = None,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
+) -> None:
+    """Verbose, agent-friendly docs for a single command or resource.
+
+    Where `--help` is terse and `--help-json` is machine output,
+    `explain` is the long-form variant: prints every flag with type
+    and default, every documented example, and a closing reminder of
+    the universal flag set. Designed for agents that need to use a
+    command correctly on the first try.
+
+    Examples:
+      quell explain                       # root command tree
+      quell explain incident list         # one verb in detail
+      quell explain config                # whole sub-app
+    """
+    from quell.interface.explain import explain
+
+    out = build_output(no_color=no_color)
+    safe_run(out, lambda: explain(out, command or []))
+
+
 @app.command(name="version")
 def show_version() -> None:
     """Print the installed Quell version and exit.
