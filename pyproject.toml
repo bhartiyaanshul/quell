@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "quell"
-version = "0.2.0"
+version = "0.2.1"
 description = "An on-call engineer that never sleeps."
 authors = ["Anshul Bhartiya"]
 license = "Apache-2.0"

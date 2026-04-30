@@ -16,6 +16,7 @@ import questionary
 import typer
 
 from quell.utils.keyring_utils import set_secret
+from quell.utils.toml_writer import dumps as toml_dumps
 
 # ---------------------------------------------------------------------------
 # Project detection helpers
@@ -84,45 +85,12 @@ def _ensure_gitignore(path: Path) -> None:
 
 
 def _write_config_toml(path: Path, data: dict[str, Any]) -> None:
-    """Write *data* to .quell/config.toml using basic TOML serialisation."""
+    """Write *data* to ``<path>/.quell/config.toml`` as valid TOML."""
     quell_dir = path / ".quell"
     quell_dir.mkdir(exist_ok=True)
     config_file = quell_dir / "config.toml"
-
-    lines: list[str] = ["# Quell configuration — managed by `quell init`\n"]
-
-    def _write_table(prefix: str, obj: dict[str, Any]) -> list[str]:
-        """Recursively serialise a dict as TOML sections."""
-        result: list[str] = []
-        scalars: list[tuple[str, Any]] = []
-        tables: list[tuple[str, dict[str, Any]]] = []
-
-        for k, v in obj.items():
-            if isinstance(v, dict):
-                tables.append((k, v))
-            else:
-                scalars.append((k, v))
-
-        for k, v in scalars:
-            if isinstance(v, str):
-                result.append(f'{k} = "{v}"\n')
-            elif isinstance(v, bool):
-                result.append(f"{k} = {'true' if v else 'false'}\n")
-            elif isinstance(v, int | float):
-                result.append(f"{k} = {v}\n")
-            elif isinstance(v, list):
-                items = ", ".join(f'"{x}"' if isinstance(x, str) else str(x) for x in v)
-                result.append(f"{k} = [{items}]\n")
-
-        for k, v in tables:
-            section = f"{prefix}.{k}" if prefix else k
-            result.append(f"\n[{section}]\n")
-            result.extend(_write_table(section, v))
-
-        return result
-
-    lines.extend(_write_table("", data))
-    config_file.write_text("".join(lines), encoding="utf-8")
+    rendered = toml_dumps(data, header="Quell configuration — managed by `quell init`")
+    config_file.write_text(rendered, encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------

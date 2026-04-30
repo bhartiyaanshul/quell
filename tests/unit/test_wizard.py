@@ -79,23 +79,37 @@ def test_ensure_gitignore_idempotent(tmp_path: Path) -> None:
 
 
 def test_write_config_toml_creates_file(tmp_path: Path) -> None:
-    """Writes a valid .quell/config.toml from a data dict."""
+    """Writes a valid, parseable .quell/config.toml from a data dict."""
+    import tomllib
+
     data = {
         "repo_path": str(tmp_path),
         "llm": {"model": "openai/gpt-4o"},
-        "monitors": [],
+        "monitors": [{"type": "local-file", "path": "/var/log/app.log"}],
     }
     _write_config_toml(tmp_path, data)
     config_file = tmp_path / ".quell" / "config.toml"
     assert config_file.exists()
-    content = config_file.read_text()
-    assert "openai/gpt-4o" in content
+    parsed = tomllib.loads(config_file.read_text(encoding="utf-8"))
+    assert parsed == data
 
 
 def test_write_config_toml_creates_quell_dir(tmp_path: Path) -> None:
     """Creates .quell/ directory if it does not exist."""
     _write_config_toml(tmp_path, {"repo_path": "."})
     assert (tmp_path / ".quell").is_dir()
+
+
+def test_write_config_toml_handles_windows_path(tmp_path: Path) -> None:
+    """Regression: backslashes in paths must round-trip through tomllib."""
+    import tomllib
+
+    data = {"repo_path": r"C:\Users\anshul", "llm": {"model": "ollama/llama3"}}
+    _write_config_toml(tmp_path, data)
+    parsed = tomllib.loads(
+        (tmp_path / ".quell" / "config.toml").read_text(encoding="utf-8")
+    )
+    assert parsed["repo_path"] == r"C:\Users\anshul"
 
 
 # ---------------------------------------------------------------------------
