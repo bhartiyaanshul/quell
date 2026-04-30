@@ -70,7 +70,12 @@ def init(
         ),
     ] = None,
 ) -> None:
-    """Run the interactive setup wizard to configure Quell for a project."""
+    """Run the interactive setup wizard to configure Quell for a project.
+
+    Phase 3.6 will add ``--monitor``, ``--log-path``, ``--llm-provider``
+    etc. so the wizard can be driven non-interactively. For now,
+    ``init`` remains interactive and the universal flags don't apply.
+    """
     from quell.interface.wizard import run_init
 
     run_init(path)
@@ -86,11 +91,30 @@ def doctor(
             help="Project directory to check (defaults to current directory).",
         ),
     ] = None,
+    json_mode: Annotated[
+        bool, typer.Option("--json", help="Emit a doctor.run JSON envelope.")
+    ] = False,
+    quiet: Annotated[
+        bool,
+        typer.Option(
+            "--quiet", "-q", help="Suppress the table; exit code is the signal."
+        ),
+    ] = False,
+    no_color: Annotated[
+        bool, typer.Option("--no-color", help="Disable ANSI colors.")
+    ] = False,
 ) -> None:
-    """Check your environment and configuration for issues."""
+    """Check your environment and configuration for issues.
+
+    Examples:
+      quell doctor
+      quell doctor --json | jq '.data.failed == 0'
+      quell doctor --quiet || echo "something is wrong"
+    """
     from quell.interface.doctor import run_doctor
 
-    ok = run_doctor(path)
+    out = Output(quiet=quiet, json_mode=json_mode, no_color=no_color or None)
+    ok = run_doctor(path, out=out)
     if not ok:
         raise typer.Exit(code=1)
 
@@ -111,16 +135,30 @@ def watch(
             help="Project directory to watch (defaults to current directory).",
         ),
     ] = None,
+    quiet: Annotated[
+        bool, typer.Option("--quiet", "-q", help="Suppress the interrupted notice.")
+    ] = False,
+    no_color: Annotated[
+        bool,
+        typer.Option("--no-color", help="Disable ANSI colors in the wrapper notice."),
+    ] = False,
 ) -> None:
-    """Start the monitor -> detector -> agent investigation loop."""
+    """Start the monitor -> detector -> agent investigation loop.
+
+    Loop output is structured logging via Loguru and is unaffected by
+    ``--quiet`` / ``--no-color`` for now (a JSONL stream is on the
+    Phase 4 roadmap). The flags currently scope to the wrapper-level
+    ``interrupted`` notice the CLI emits on Ctrl-C.
+    """
     from quell.config.loader import load_config
     from quell.watch import watch as run_watch
 
+    out = Output(quiet=quiet, no_color=no_color or None)
     config = load_config(local_dir=path, inject_secrets=True)
     try:
         asyncio.run(run_watch(config))
     except KeyboardInterrupt:
-        Output().info("(quell watch: interrupted)")
+        out.info("(quell watch: interrupted)")
 
 
 @app.command()
@@ -137,14 +175,27 @@ def dashboard(
         bool,
         typer.Option("--no-open", help="Do not auto-open the browser."),
     ] = False,
+    quiet: Annotated[
+        bool, typer.Option("--quiet", "-q", help="Suppress the interrupted notice.")
+    ] = False,
+    no_color: Annotated[
+        bool,
+        typer.Option("--no-color", help="Disable ANSI colors in the wrapper notice."),
+    ] = False,
 ) -> None:
-    """Launch the read-only web dashboard on the local machine."""
+    """Launch the read-only web dashboard on the local machine.
+
+    The dashboard is a Next.js app — its own logging is unaffected by
+    ``--quiet`` / ``--no-color``. The flags currently scope to the
+    wrapper-level ``interrupted`` notice on Ctrl-C.
+    """
     from quell.dashboard.launcher import run_dashboard_sync
 
+    out = Output(quiet=quiet, no_color=no_color or None)
     try:
         run_dashboard_sync(host=host, port=port, open_browser=not no_open)
     except KeyboardInterrupt:
-        Output().info("(quell dashboard: interrupted)")
+        out.info("(quell dashboard: interrupted)")
 
 
 @app.command(name="test-notifier")
