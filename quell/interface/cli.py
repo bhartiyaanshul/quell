@@ -56,7 +56,7 @@ def doctor(
 @app.command(name="version")
 def show_version() -> None:
     """Print the installed Quell version and exit."""
-    typer.echo(f"quell-agent {__version__}")
+    typer.echo(f"quell {__version__}")
 
 
 @app.command()

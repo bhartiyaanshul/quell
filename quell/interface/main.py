@@ -22,7 +22,7 @@ app = typer.Typer(
 def _print_version(value: bool) -> None:
     """Typer callback that prints the version and exits when --version is given."""
     if value:
-        typer.echo(f"quell-agent {__version__}")
+        typer.echo(f"quell {__version__}")
         raise typer.Exit()
 
 

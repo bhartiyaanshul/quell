@@ -9,7 +9,7 @@
 #      `resource` blocks below using `brew install-bottle-utility` or
 #      `pypi-resources`:
 #        pip install homebrew-pypi-poet
-#        poet quell-agent >> quell.rb
+#        poet quell >> quell.rb
 #      (paste the `resource` blocks it emits into the formula below.)
 #
 # Once live, users install with:
@@ -26,7 +26,7 @@ class Quell < Formula
 
   desc "Open-source multi-agent incident response system"
   homepage "https://github.com/bhartiyaanshul/quell"
-  url "https://files.pythonhosted.org/packages/.../quell-agent-0.2.0.tar.gz"
+  url "https://files.pythonhosted.org/packages/.../quell-0.2.0.tar.gz"
   sha256 "REPLACE_WITH_ACTUAL_SHA256_AFTER_PYPI_PUBLISH"
   license "Apache-2.0"
 
@@ -46,7 +46,7 @@ class Quell < Formula
   end
 
   test do
-    assert_match "quell-agent", shell_output("#{bin}/quell --version")
+    assert_match "quell", shell_output("#{bin}/quell --version")
     system bin/"quell", "--help"
   end
 end

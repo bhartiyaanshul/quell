@@ -250,7 +250,7 @@ if [ -n "$QUELL_SOURCE" ]; then
     fi
     SRC_DIR="$QUELL_SOURCE"
     ok "Using existing checkout at $SRC_DIR"
-elif [ -f "$(dirname "$0")/pyproject.toml" ] && grep -q 'quell-agent' "$(dirname "$0")/pyproject.toml" 2>/dev/null; then
+elif [ -f "$(dirname "$0")/pyproject.toml" ] && grep -qE '^name = "quell"' "$(dirname "$0")/pyproject.toml" 2>/dev/null; then
     SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
     ok "Running from checkout at $SRC_DIR"
 else
@@ -329,7 +329,7 @@ fi
 # ---------------------------------------------------------------------------
 
 step "Installing Quell"
-if pipx list --short 2>/dev/null | grep -q '^quell-agent '; then
+if pipx list --short 2>/dev/null | grep -q '^quell '; then
     pipx install --force --python "$PYTHON" "$SRC_DIR"
 else
     pipx install --python "$PYTHON" "$SRC_DIR"
@@ -351,12 +351,12 @@ if [ ! -x "$QUELL_BIN" ]; then
     exit 1
 fi
 VERSION_OUTPUT="$("$QUELL_BIN" --version 2>&1 || true)"
-if [[ "$VERSION_OUTPUT" != *"quell-agent"* ]]; then
+if [[ "$VERSION_OUTPUT" != "quell "* ]]; then
     # Fallback to the `version` subcommand for older builds.
     VERSION_OUTPUT="$("$QUELL_BIN" version 2>&1 || true)"
 fi
-if [[ "$VERSION_OUTPUT" != *"quell-agent"* ]]; then
-    err "Installed binary did not return a quell-agent version string."
+if [[ "$VERSION_OUTPUT" != "quell "* ]]; then
+    err "Installed binary did not return a quell version string."
     err "Got: $VERSION_OUTPUT"
     exit 1
 fi

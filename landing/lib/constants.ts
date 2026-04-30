@@ -15,7 +15,7 @@ export const INSTALL_COMMANDS = [
     id: "npm",
     label: "npm",
     sublabel: "for JS devs",
-    command: "npm i -g quell-agent",
+    command: "npm i -g quell",
     hint: "Postinstall hook downloads the native binary — zero Python needed.",
   },
   {
@@ -29,7 +29,7 @@ export const INSTALL_COMMANDS = [
     id: "pipx",
     label: "pipx",
     sublabel: "Python users",
-    command: "pipx install quell-agent",
+    command: "pipx install quell",
     hint: "Isolated Python environment under ~/.local — recommended if you already have pipx.",
   },
   {

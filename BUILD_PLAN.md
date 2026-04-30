@@ -645,7 +645,7 @@ jobs:
 then public launch on Hacker News + X + Product Hunt.
 
 ### Checklist
-- [ ] `poetry run quell --help` works cleanly from a fresh `pipx install quell-agent`
+- [ ] `poetry run quell --help` works cleanly from a fresh `pipx install quell`
 - [ ] `quell init` wizard runs end-to-end on macOS, Linux, Windows
 - [ ] `quell doctor` passes with a real API key configured
 - [ ] `quell watch` runs against a local log file and spawns an agent

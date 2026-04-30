@@ -195,4 +195,4 @@ python3 -c "from quell.utils.keyring_utils import set_secret; set_secret('anthro
 ```
 
 On macOS you can also inspect or edit them in `Keychain Access.app`
-under the `quell-agent` service.
+under the `quell/<provider>` service (e.g. `quell/anthropic`).

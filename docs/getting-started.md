@@ -50,7 +50,7 @@ quell --version
 quell --help
 ```
 
-If `quell --version` prints `quell-agent 0.1.0` you're done with install.
+If `quell --version` prints `quell 0.2.0` you're done with install.
 
 Prefer a venv or editable install?  See
 [Installation](installation.md) for the full matrix.
