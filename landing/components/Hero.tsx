@@ -94,7 +94,7 @@ export function Hero() {
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent/15">
               <Sparkles size={10} className="text-accent" />
             </span>
-            <span>v0.2.0 — dashboard, notifiers, cost budgets</span>
+            <span>v0.3.0 — agent-friendly CLI: resource verbs, JSON, exit codes</span>
             <ArrowRight
               size={12}
               className="transition group-hover:translate-x-0.5"
@@ -175,7 +175,7 @@ export function Hero() {
             custom={1.1}
             className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-fg-dim sm:mt-8 sm:gap-x-5 sm:text-xs"
           >
-            <Bullet label="302 tests passing" />
+            <Bullet label="546 tests passing" />
             <Bullet label="Python 3.12+" />
             <Bullet label="Apache 2.0" />
             <Bullet label="Sandboxed by default" />

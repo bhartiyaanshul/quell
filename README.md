@@ -6,7 +6,7 @@
 <p align="center">
   <a href="https://github.com/bhartiyaanshul/quell/releases/latest"><img src="https://img.shields.io/github/v/release/bhartiyaanshul/quell?color=fb923c&label=release&labelColor=0a0a0f&style=flat-square" alt="Latest release"/></a>
   <a href="https://github.com/bhartiyaanshul/quell/actions"><img src="https://img.shields.io/github/actions/workflow/status/bhartiyaanshul/quell/ci.yml?branch=main&label=CI&labelColor=0a0a0f&color=22c55e&style=flat-square" alt="CI status"/></a>
-  <img src="https://img.shields.io/badge/tests-302_passing-22c55e?labelColor=0a0a0f&style=flat-square" alt="302 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-546_passing-22c55e?labelColor=0a0a0f&style=flat-square" alt="546 tests passing"/>
   <img src="https://img.shields.io/badge/mypy-strict-a78bfa?labelColor=0a0a0f&style=flat-square" alt="mypy strict"/>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-a78bfa?labelColor=0a0a0f&style=flat-square" alt="Apache 2.0"/></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.12+-a78bfa?labelColor=0a0a0f&style=flat-square" alt="Python 3.12+"/></a>
@@ -182,29 +182,30 @@ One coloured table with exit code 0/1 for CI use.
 <tr>
 <td width="50%" valign="top">
 
-**`quell history`** — recent incidents
+**`quell incident list`** — recent incidents <sup>v0.3</sup>
 
-<img src="./docs/media/quell-history.png" alt="quell history table output" />
+<img src="./docs/media/quell-history.png" alt="quell incident list table output" />
 
 Reverse-chronological list of every incident Quell has investigated.
-Filter with `--limit`.
+Filter with `--status`, `--severity`, `--since "1 week ago"`, `--limit`.
+Pipe to `jq` with `--json`.
 
 </td>
 <td width="50%" valign="top">
 
-**`quell show <id>`** — incident detail
+**`quell incident show <id>`** — incident detail <sup>v0.3</sup>
 
-<img src="./docs/media/quell-show.png" alt="quell show detailed incident view" />
+<img src="./docs/media/quell-show.png" alt="quell incident show detailed view" />
 
 Root cause, evidence, proposed fix, occurrence count, first/last
-seen timestamps, linked PR URL.
+seen timestamps, linked PR URL. Exits `7` if the ID isn't found.
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-**`quell dashboard`** — local web UI <sup>v0.2</sup>
+**`quell dashboard`** — local web UI
 
 Boots a Next.js + FastAPI dashboard at `http://127.0.0.1:7777` with
 incident list, run timelines, findings, and aggregate stats. Auto-opens
@@ -213,18 +214,18 @@ your browser; pass `--no-open` for CI.
 </td>
 <td width="50%" valign="top">
 
-**`quell replay <id>`** — terminal timeline <sup>v0.2</sup>
+**`quell incident replay <id>`** — terminal timeline <sup>v0.3</sup>
 
 Prints the full event stream for a past investigation — every LLM
 call, tool call, latency, cost, and error — as a chronological
-timeline. Same data the dashboard renders interactively.
+timeline. `--json` emits the same data as a structured envelope.
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-**`quell test-notifier <channel>`** — verify webhooks <sup>v0.2</sup>
+**`quell notifier test <channel>`** — verify webhooks <sup>v0.3</sup>
 
 Fires a synthetic incident through Slack / Discord / Telegram so you
 can confirm webhook URLs and bot tokens are wired up before real
@@ -233,11 +234,18 @@ traffic hits.
 </td>
 <td width="50%" valign="top">
 
-&nbsp;
+**`quell config show`** — current configuration <sup>v0.3</sup>
+
+Prints the merged `.quell/config.toml` (secrets redacted) as TOML or
+`--json`. Companion verbs: `get <key>`, `set <key> <value> --yes`,
+`validate`, `edit`.
 
 </td>
 </tr>
 </table>
+
+> [!TIP]
+> Coming from Quell 0.2? The 0.2 commands (`quell history`, `quell show`, `quell stats`, `quell replay`, `quell test-notifier`) still work as deprecated aliases — see [**docs/migrating-to-0.3.md**](docs/migrating-to-0.3.md) for the full upgrade map.
 
 Full walkthrough in [**docs/getting-started.md**](docs/getting-started.md).
 

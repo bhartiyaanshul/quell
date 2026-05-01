@@ -74,12 +74,12 @@ export const FEATURES = [
   },
   {
     title: "Slack, Discord, Telegram",
-    body: "Fan an investigation summary out to every channel in parallel the moment the agent finishes. Verify webhooks with quell test-notifier.",
+    body: "Fan an investigation summary out to every channel in parallel the moment the agent finishes. Verify webhooks with quell notifier test.",
     icon: "bell",
   },
   {
     title: "Web dashboard + replay",
-    body: "quell dashboard boots a local Next.js + FastAPI UI; quell replay <id> prints the same event timeline in your terminal. Read-only.",
+    body: "quell dashboard boots a local Next.js + FastAPI UI; quell incident replay <id> prints the same event timeline in your terminal. Read-only.",
     icon: "layout-dashboard",
   },
   {
