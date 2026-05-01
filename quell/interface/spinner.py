@@ -52,16 +52,18 @@ _QUELL_FRAMES: list[str] = [
 ]
 
 
-def _register_quell_spinner() -> None:
+def register_quell_spinner() -> None:
     """Register the ``quell`` spinner shape with Rich's global SPINNERS dict.
 
-    Idempotent — guarded so re-import doesn't clobber other registrations.
+    Idempotent — guarded so re-import doesn't clobber other registrations,
+    and so callers from outside this module (``progress.py`` is the
+    obvious one) can safely invoke it without worrying about ordering.
     """
     if "quell" not in SPINNERS:
         SPINNERS["quell"] = {"interval": 80, "frames": _QUELL_FRAMES}
 
 
-_register_quell_spinner()
+register_quell_spinner()
 
 
 class _StaticStatus:
@@ -108,4 +110,4 @@ def spinner(output: Output, message: str) -> Iterator[object]:
         yield status
 
 
-__all__ = ["spinner"]
+__all__ = ["register_quell_spinner", "spinner"]

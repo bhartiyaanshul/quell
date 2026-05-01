@@ -57,6 +57,22 @@ def test_progress_update_changes_label_in_summary(
     assert "Phase 1" not in err
 
 
+def test_progress_can_construct_spinner_column_in_isolation() -> None:
+    """Importing ``progress`` alone must not crash on the quell SpinnerColumn.
+
+    Regression for: ``quell doctor`` blew up with ``KeyError: 'quell'``
+    when only ``progress.py`` was imported (no other site had pulled in
+    ``spinner.py`` to trigger the SPINNERS registration). ``progress``
+    now ensures the shape is registered at its own import time.
+    """
+    from rich.progress import SpinnerColumn
+
+    # Constructing the column eagerly resolves the spinner name through
+    # rich.spinner.SPINNERS — which is exactly the path that crashed.
+    column = SpinnerColumn(spinner_name="quell", style="#fb923c")
+    assert column is not None
+
+
 def test_progress_silent_in_json_mode(capsys: CaptureFixture[str]) -> None:
     """JSON mode: stdout stays empty so consumers can parse it."""
     out = Output(json_mode=True)

@@ -34,6 +34,16 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
+from quell.interface.spinner import register_quell_spinner
+
+# ``progress`` uses ``SpinnerColumn(spinner_name="quell", ...)``, which
+# resolves the name via Rich's global ``SPINNERS`` dict at construction
+# time. The shape is registered by ``spinner.py`` at import — ensure
+# we've also triggered it here so callers that only import ``progress``
+# (e.g. ``doctor.run_doctor``) don't crash with KeyError before the
+# bar even renders.
+register_quell_spinner()
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 

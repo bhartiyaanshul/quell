@@ -296,14 +296,49 @@ def watch(
       quell watch 2>&1 | tee quell.log         # capture loguru output
     """
     from quell.config.loader import load_config
+    from quell.utils.errors import MonitorError, QuellError
     from quell.watch import watch as run_watch
 
     out = build_output(quiet=quiet, no_color=no_color)
     config = load_config(local_dir=path, inject_secrets=True)
+
+    # Pre-check the most common first-run gap: no monitors configured.
+    # Rendering this at the CLI boundary lets us point at `quell init`
+    # specifically — the runtime-level "no monitors" warning that used
+    # to surface from watch.py couldn't, and silently exited 0.
+    if not config.monitors:
+        out.error(
+            "No monitors configured — Quell isn't watching anything yet.",
+            fix=(
+                "quell init               # interactive setup\n"
+                "quell init --yes ...     # non-interactive (see --help)"
+            ),
+            exit_code=3,
+        )
+        raise typer.Exit(code=3)
+
     try:
         asyncio.run(run_watch(config))
     except KeyboardInterrupt:
         out.info("(quell watch: interrupted)")
+    except MonitorError as exc:
+        # Most common: the configured log path doesn't exist. Render
+        # via Output so the user sees a tidy error + fix instead of a
+        # Rich traceback dump.
+        out.error(
+            str(exc),
+            fix=(
+                "quell config edit        # update the monitor path\n"
+                "quell init               # reconfigure interactively"
+            ),
+            exit_code=3,
+        )
+        raise typer.Exit(code=3) from None
+    except QuellError as exc:
+        # Catch-all for runtime-layer errors that escape the loop —
+        # render the message cleanly rather than dumping a traceback.
+        out.error(str(exc), exit_code=1)
+        raise typer.Exit(code=1) from None
 
 
 @app.command()
